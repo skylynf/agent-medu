@@ -4,31 +4,24 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # 延迟解析上游主机：避免启动时 *.railway.internal 尚未就绪导致 nginx 直接退出。
-    # 127.0.0.11：Docker Compose；[fd12::10]：Railway 私有网络 DNS（见官方社区说明）。
-    resolver 127.0.0.11 [fd12::10] valid=2s ipv6=on;
-    resolver_timeout 5s;
-
     location / {
-        try_files $$uri $$uri/ /index.html;
+        try_files $uri $uri/ /index.html;
     }
 
     location /api/ {
-        set $$backend "${BACKEND_HOST}";
-        proxy_pass http://$$backend/api/;
+        proxy_pass http://${BACKEND_HOST}/api/;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host $$host;
-        proxy_set_header X-Real-IP $$remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
 
     location /ws/ {
-        set $$backend "${BACKEND_HOST}";
-        proxy_pass http://$$backend/ws/;
+        proxy_pass http://${BACKEND_HOST}/ws/;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host $$host;
+        proxy_set_header Host $host;
     }
 }
