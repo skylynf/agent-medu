@@ -18,7 +18,7 @@ async def evaluate_need_for_intervention(
         "hint_content": None,
     }
 
-    if student_message_count < 5:
+    if student_message_count < 3:
         return no_intervention
 
     unchecked_critical = []

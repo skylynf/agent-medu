@@ -33,9 +33,9 @@ class MultiAgentSession(SessionStrategy):
     # 结束时也会调用 final_evaluator（基于 worksheet + 全程对话）
     PROMPT_KEYS = ("sp_agent", "tutor_agent", "turn_evaluator", "final_evaluator")
 
-    TUTOR_COOLDOWN_MESSAGES = 4
-    TUTOR_MAX_INTERVENTIONS = 4
-    TUTOR_MIN_MESSAGES_BEFORE_FIRST = 5
+    TUTOR_COOLDOWN_MESSAGES = 2
+    TUTOR_MAX_INTERVENTIONS = 5
+    TUTOR_MIN_MESSAGES_BEFORE_FIRST = 3
 
     def __init__(self, session_id: uuid.UUID, case_id: str, user_id: uuid.UUID):
         super().__init__(session_id, case_id, user_id)

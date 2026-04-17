@@ -11,6 +11,7 @@ interface FieldDef {
 // 主诉 / 现病史 / 既往史 / 体格检查 / 辅助检查 等内容可由 final_evaluator
 // 直接从对话记录中提取，不再要求学生重复填写。
 const FIELDS: FieldDef[] = [
+  { key: "chief_complaint", label: "主诉", rows: 4 },
   { key: "differentials", label: "鉴别诊断（每行一个）", rows: 4 },
   { key: "diagnosis", label: "最可能诊断", rows: 2 },
   { key: "diagnostic_reasoning", label: "诊断依据", rows: 4 },
