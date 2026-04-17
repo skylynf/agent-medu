@@ -37,14 +37,14 @@ async def _create_db_schema() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_task = asyncio.create_task(_create_db_schema())
+    # Fire-and-forget: schema init runs in the background so the app can
+    # respond to healthchecks immediately without waiting for the DB.
+    asyncio.create_task(_create_db_schema())
     try:
         yield
     finally:
-        try:
-            await init_task
-        except Exception:
-            pass
+        # Do not await the init task here — it either finished already or
+        # we let it be cancelled naturally when the event loop shuts down.
         await engine.dispose()
 
 
