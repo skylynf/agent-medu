@@ -10,6 +10,12 @@ export interface WSMessage {
   completion_rate?: number;
   score?: number;
   delta?: Record<string, any>;
+  /** 与会话开场白一并下发的评估快照（嵌套在 patient_response 内） */
+  eval_update?: {
+    checklist?: Record<string, any>;
+    completion_rate?: number;
+    score?: number;
+  };
   session_id?: string;
   case_id?: string;
   final_score?: number;
@@ -31,6 +37,8 @@ export function useWebSocket() {
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
 
   const connect = useCallback(() => {
+    setMessages([]);
+    setLastMessage(null);
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
     const ws = new WebSocket(`${protocol}//${host}/ws/consultation`);

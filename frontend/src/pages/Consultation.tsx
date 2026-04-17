@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useWebSocket, WSMessage } from "../hooks/useWebSocket";
 import { api, UserResponse } from "../services/api";
@@ -29,6 +29,14 @@ export default function Consultation({ user }: Props) {
   const [sessionEnded, setSessionEnded] = useState(false);
   const [summary, setSummary] = useState<WSMessage | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  /** 已处理的 WS 事件条数（messages 保留全量，避免 lastMessage 被批量更新覆盖丢失） */
+  const wsEventsProcessed = useRef(0);
+
+  const applyEvalPayload = useCallback((msg: WSMessage) => {
+    if (msg.checklist) setChecklist(msg.checklist);
+    if (msg.completion_rate !== undefined) setCompletionRate(msg.completion_rate);
+    if (msg.score !== undefined) setScore(msg.score);
+  }, []);
 
   useEffect(() => {
     if (caseId) {
@@ -48,64 +56,87 @@ export default function Consultation({ user }: Props) {
   }, [ws.connected, caseId, sessionActive, sessionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const msg = ws.lastMessage;
-    if (!msg) return;
-
-    switch (msg.type) {
-      case "session_started":
-        setSessionActive(true);
-        break;
-
-      case "typing":
-        setIsTyping(true);
-        break;
-
-      case "patient_response":
-        setIsTyping(false);
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            role: "patient",
-            content: msg.content || "",
-            emotion: msg.emotion,
-            timestamp: Date.now(),
-          },
-        ]);
-        break;
-
-      case "eval_update":
-        if (msg.checklist) setChecklist(msg.checklist);
-        if (msg.completion_rate !== undefined) setCompletionRate(msg.completion_rate);
-        if (msg.score !== undefined) setScore(msg.score);
-        break;
-
-      case "tutor_hint":
-        setTutorHint({
-          content: msg.content || "",
-          level: msg.hint_level || "moderate",
-        });
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            role: "tutor",
-            content: msg.content || "",
-            hint_level: msg.hint_level,
-            timestamp: Date.now(),
-          },
-        ]);
-        break;
-
-      case "session_summary":
-        setIsTyping(false);
-        setSessionActive(false);
-        setSessionEnded(true);
-        setSummary(msg);
-        break;
+    const msgs = ws.messages;
+    if (msgs.length === 0) {
+      wsEventsProcessed.current = 0;
+      return;
     }
-  }, [ws.lastMessage]);
+    if (wsEventsProcessed.current > msgs.length) {
+      wsEventsProcessed.current = 0;
+    }
+
+    while (wsEventsProcessed.current < msgs.length) {
+      const msg = msgs[wsEventsProcessed.current];
+      wsEventsProcessed.current += 1;
+
+      switch (msg.type) {
+        case "session_started":
+          setSessionActive(true);
+          break;
+
+        case "typing":
+          setIsTyping(true);
+          break;
+
+        case "patient_response":
+          setIsTyping(false);
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              role: "patient",
+              content: msg.content || "",
+              emotion: msg.emotion,
+              timestamp: Date.now(),
+            },
+          ]);
+          if (msg.eval_update) {
+            const ev = msg.eval_update;
+            if (ev.checklist) setChecklist(ev.checklist);
+            if (ev.completion_rate !== undefined) setCompletionRate(ev.completion_rate);
+            if (ev.score !== undefined) setScore(ev.score);
+          }
+          break;
+
+        case "eval_update":
+          applyEvalPayload(msg);
+          break;
+
+        case "tutor_hint":
+          setTutorHint({
+            content: msg.content || "",
+            level: msg.hint_level || "moderate",
+          });
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              role: "tutor",
+              content: msg.content || "",
+              hint_level: msg.hint_level,
+              timestamp: Date.now(),
+            },
+          ]);
+          break;
+
+        case "session_summary":
+          setIsTyping(false);
+          setSessionActive(false);
+          setSessionEnded(true);
+          setSummary(msg);
+          break;
+
+        case "error":
+          setIsTyping(false);
+          break;
+
+        default:
+          break;
+      }
+    }
+  }, [ws.messages, applyEvalPayload]);
 
   const handleSend = useCallback(
     (content: string) => {
+      setIsTyping(true);
       setChatMessages((prev) => [
         ...prev,
         { role: "student", content, timestamp: Date.now() },
