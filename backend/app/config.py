@@ -17,6 +17,9 @@ def _to_asyncpg_url(url: str) -> str:
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/spagent"
     DATABASE_URL_SYNC: str = "postgresql://postgres:postgres@localhost:5432/spagent"
+    # 仅当连接串含 sslmode=verify-ca 或 verify-full 时生效：false 则仍走 TLS，但不校验证书链。
+    # sslmode=require 默认不校验链（与 libpq 一致）；若仍遇 SSL 报错可再设 false。
+    DATABASE_SSL_VERIFY: bool = True
     DASHSCOPE_API_KEY: str = ""
     JWT_SECRET: str = "change-me-in-production"
     JWT_ALGORITHM: str = "HS256"
