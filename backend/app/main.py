@@ -72,6 +72,44 @@ def _build_strategy(method: str, *, session_id, case_id, user_id) -> SessionStra
     return MultiAgentSession(session_id=session_id, case_id=case_id, user_id=user_id)
 
 
+LIGHTWEIGHT_MIGRATIONS: list[tuple[str, str]] = [
+    # (description, SQL)。所有语句都使用 IF NOT EXISTS / IF EXISTS，保证幂等。
+    (
+        "training_sessions.method",
+        "ALTER TABLE training_sessions "
+        "ADD COLUMN IF NOT EXISTS method VARCHAR(20) NOT NULL DEFAULT 'multi_agent'",
+    ),
+    (
+        "training_sessions.method index",
+        "CREATE INDEX IF NOT EXISTS ix_training_sessions_method "
+        "ON training_sessions (method)",
+    ),
+    (
+        "training_sessions.prompt_versions_json",
+        "ALTER TABLE training_sessions "
+        "ADD COLUMN IF NOT EXISTS prompt_versions_json JSONB",
+    ),
+]
+
+
+async def _apply_lightweight_migrations() -> None:
+    """对老库做最小幅度的列扩展。create_all 不会修改已有表结构，
+    所以这里手动跑 ALTER TABLE，避免 'column does not exist' 报错。"""
+    try:
+        async with engine.begin() as conn:
+            for desc, sql in LIGHTWEIGHT_MIGRATIONS:
+                try:
+                    await conn.execute(text(sql))
+                    logger.info("Migration applied: %s", desc)
+                except Exception as inner_exc:
+                    # 单条失败不阻塞剩余迁移；只记日志
+                    logger.warning(
+                        "Migration step %s failed (continuing): %s", desc, inner_exc
+                    )
+    except Exception as exc:
+        logger.exception("Lightweight migrations FAILED — %s: %s", type(exc).__name__, exc)
+
+
 async def _create_db_schema() -> None:
     logger.info("DB schema init: connecting to %s", _safe_db_url(settings.DATABASE_URL))
     try:
@@ -81,6 +119,9 @@ async def _create_db_schema() -> None:
     except Exception as exc:
         logger.exception("DB schema init FAILED — type=%s msg=%s", type(exc).__name__, exc)
         return
+
+    # 给老库补齐新列；新库这些列已经在 create_all 里建好，ALTER 是 no-op
+    await _apply_lightweight_migrations()
 
     # 装载 prompt 默认值并 seed 到 DB（仅当 DB 中尚无 active 行时）
     try:
