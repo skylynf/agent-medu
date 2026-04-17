@@ -1,4 +1,6 @@
+import asyncio
 import json
+import logging
 import uuid
 from contextlib import asynccontextmanager
 
@@ -17,16 +19,33 @@ from app.models.session import TrainingSession
 
 settings = get_settings()
 
+logger = logging.getLogger(__name__)
+
 # In-memory registry of active orchestrators (keyed by session_id)
 active_sessions: dict[uuid.UUID, SessionOrchestrator] = {}
 
 
+async def _create_db_schema() -> None:
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("database schema ready")
+    except Exception:
+        # 不阻塞进程启动，便于 Railway /health 先通过；具体错误看部署日志
+        logger.exception("database schema initialization failed")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    await engine.dispose()
+    init_task = asyncio.create_task(_create_db_schema())
+    try:
+        yield
+    finally:
+        try:
+            await init_task
+        except Exception:
+            pass
+        await engine.dispose()
 
 
 app = FastAPI(
