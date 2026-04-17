@@ -156,7 +156,7 @@ export default function Exam(_: Props) {
 
   const handleEnd = useCallback(() => {
     if (isEnding) return;
-    if (!window.confirm("确认要结束考试并提交进行总评吗？提交后无法再次问诊，总评过程约需 10–30 秒。")) {
+    if (!window.confirm("确认要结束考试并提交进行总评吗？提交后无法再次问诊，总评通常较快完成，最长约 2 分钟。")) {
       return;
     }
     setErrorBanner(null);
@@ -375,7 +375,7 @@ export default function Exam(_: Props) {
 
   return (
     <div className="flex flex-col h-[calc(100vh-57px)] bg-slate-50 relative">
-      {isEnding && <EndingOverlay text="正在生成考试总评..." subtext="系统正基于全程对话与临床表单做整体评估（OSCE 4 维 + 诊断），约需 10–30 秒，请勿关闭此页面。" />}
+      {isEnding && <EndingOverlay text="正在生成考试总评..." subtext="系统正基于全程对话与临床表单做整体评估（OSCE 4 维 + 诊断），最长约 2 分钟，请勿关闭此页面。" />}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button

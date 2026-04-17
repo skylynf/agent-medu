@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 # 进而导致并发的 WebSocket 心跳 / 其他请求全部停滞，触发反向代理 idle timeout
 # 并在客户端显示为「connection closed」。所以这里统一用 to_thread 把它丢到线程池。
 LLM_CALL_TIMEOUT_SECONDS = 60.0
+# 会话结束时 final_evaluator 单次整评（报告）体量较大，单独放宽上限
+FINAL_EVALUATION_LLM_TIMEOUT_SECONDS = 120.0
 
 
 def _sync_call(kwargs: dict):

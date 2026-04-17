@@ -33,7 +33,15 @@ export default function Consultation({ user }: Props) {
   const [isTyping, setIsTyping] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [isEnding, setIsEnding] = useState(false);
-  const [sidebarTab, setSidebarTab] = useState<"eval" | "worksheet">("eval");
+  /** 右侧栏宽度（px），可拖动左侧竖条调整 */
+  const [sidebarWidth, setSidebarWidth] = useState(() =>
+    typeof window !== "undefined"
+      ? Math.min(560, Math.max(360, Math.round(window.innerWidth * 0.4)))
+      : 440
+  );
+  /** 右侧栏内：上方「评估进度」占比（0–1），可拖动横条调整 */
+  const [evalTopFraction, setEvalTopFraction] = useState(0.42);
+  const verticalSplitRef = useRef<HTMLDivElement>(null);
   const isReconnectingRef = useRef(false);
   /** 已处理的 WS 事件条数（messages 保留全量，避免 lastMessage 被批量更新覆盖丢失） */
   const wsEventsProcessed = useRef(0);
@@ -198,7 +206,7 @@ export default function Consultation({ user }: Props) {
 
   const handleEnd = useCallback(() => {
     if (isEnding) return;
-    if (!window.confirm("确认结束本次问诊？提交后将由系统对全程对话与临床表单进行总评，过程约需 10–30 秒。")) {
+    if (!window.confirm("确认结束本次问诊？提交后将由系统对全程对话与临床表单进行总评，通常较快完成，最长约 2 分钟。")) {
       return;
     }
     setErrorBanner(null);
@@ -211,6 +219,46 @@ export default function Consultation({ user }: Props) {
   }, [ws, isEnding]);
 
   const patientName = caseInfo?.patient_profile?.name || "患者";
+
+  const onSidebarWidthDragStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      const startX = e.clientX;
+      const startW = sidebarWidth;
+      const minW = 300;
+      const onMove = (ev: MouseEvent) => {
+        const maxW = Math.min(720, window.innerWidth * 0.68);
+        const next = Math.round(
+          Math.max(minW, Math.min(maxW, startW + (ev.clientX - startX)))
+        );
+        setSidebarWidth(next);
+      };
+      const onUp = () => {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+      };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    },
+    [sidebarWidth]
+  );
+
+  const onEvalWorksheetSplitDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!verticalSplitRef.current) return;
+    const onMove = (ev: MouseEvent) => {
+      const rect = verticalSplitRef.current?.getBoundingClientRect();
+      if (!rect || rect.height < 80) return;
+      const frac = (ev.clientY - rect.top) / rect.height;
+      setEvalTopFraction(Math.min(0.82, Math.max(0.18, frac)));
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, []);
 
   if (summary) {
     const hasFinalEval = summary.holistic_scores !== undefined;
@@ -459,40 +507,58 @@ export default function Consultation({ user }: Props) {
         </div>
       </div>
 
-      {/* Right: Eval / Worksheet Sidebar with tabs */}
-      <div className="w-96 border-l border-slate-200 bg-white overflow-hidden flex flex-col">
-        <div className="flex border-b border-slate-100">
-          <button
-            onClick={() => setSidebarTab("eval")}
-            className={`flex-1 px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-              sidebarTab === "eval"
-                ? "border-medical text-medical"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-            }`}
+      {/* 拖动调整：对话区 ↔ 右侧整体宽度 */}
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        title="拖动调整右侧区域宽度"
+        onMouseDown={onSidebarWidthDragStart}
+        className="w-1.5 shrink-0 cursor-col-resize bg-slate-200 hover:bg-medical/35 active:bg-medical/50 transition-colors"
+      />
+
+      {/* Right: 评估进度 + 临床表单 上下分栏，可同时查看 */}
+      <div
+        style={{ width: sidebarWidth }}
+        className="shrink-0 border-l border-slate-200 bg-white overflow-hidden flex flex-col min-w-[300px]"
+      >
+        <div ref={verticalSplitRef} className="flex-1 min-h-0 flex flex-col">
+          <section
+            className="min-h-0 flex flex-col border-b border-slate-100 overflow-hidden"
+            style={{ flex: `${evalTopFraction} 1 0` }}
           >
-            评估进度
-          </button>
-          <button
-            onClick={() => setSidebarTab("worksheet")}
-            className={`flex-1 px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-              sidebarTab === "worksheet"
-                ? "border-medical text-medical"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-            }`}
+            <div className="shrink-0 px-3 py-1.5 text-xs font-medium text-slate-500 bg-slate-50/80 border-b border-slate-100">
+              评估进度
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <EvalSidebar
+                checklist={checklist}
+                completionRate={completionRate}
+                score={score}
+              />
+            </div>
+          </section>
+
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            title="拖动调整评估进度与临床表单所占高度"
+            onMouseDown={onEvalWorksheetSplitDragStart}
+            className="h-2 shrink-0 cursor-row-resize bg-slate-100 hover:bg-medical/25 active:bg-medical/40 border-y border-slate-200 flex items-center justify-center transition-colors"
           >
-            临床表单
-          </button>
-        </div>
-        <div className="flex-1 min-h-0 overflow-hidden">
-          {sidebarTab === "eval" ? (
-            <EvalSidebar
-              checklist={checklist}
-              completionRate={completionRate}
-              score={score}
-            />
-          ) : (
-            <WorksheetPanel sessionId={sessionId} readOnly={!sessionActive} />
-          )}
+            <span className="w-10 h-1 rounded-full bg-slate-300" />
+          </div>
+
+          <section
+            className="min-h-0 flex flex-col overflow-hidden"
+            style={{ flex: `${1 - evalTopFraction} 1 0`, minHeight: 120 }}
+          >
+            <div className="shrink-0 px-3 py-1.5 text-xs font-medium text-slate-500 bg-slate-50/80 border-b border-slate-100">
+              临床表单
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <WorksheetPanel sessionId={sessionId} readOnly={!sessionActive} />
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -509,7 +575,7 @@ function EndingOverlay() {
             正在生成本次问诊总评...
           </div>
           <div className="text-xs text-slate-500 mt-1 leading-relaxed">
-            系统正基于全程对话与临床表单做整体评估，约需 10–30 秒，请勿关闭此页面。
+            系统正基于全程对话与临床表单做整体评估，最长约 2 分钟，请勿关闭此页面。
           </div>
         </div>
       </div>

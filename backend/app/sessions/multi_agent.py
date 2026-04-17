@@ -119,6 +119,10 @@ class MultiAgentSession(SessionStrategy):
         )
 
         if self._should_check_tutor():
+            session_row = await db.get(TrainingSession, self.session_id)
+            raw_ws = (session_row.worksheet_json if session_row else None) or {}
+            worksheet_for_tutor = raw_ws if isinstance(raw_ws, dict) else None
+
             tutor_task = evaluate_need_for_intervention(
                 case_data=self.case_data,
                 conversation_history=self.conversation_history,
@@ -126,6 +130,7 @@ class MultiAgentSession(SessionStrategy):
                 completion_rate=compute_score(self.checklist)[1],
                 last_student_message_time=self.last_student_message_time,
                 student_message_count=self.student_message_count,
+                worksheet=worksheet_for_tutor,
             )
             eval_result, tutor_result = await asyncio.gather(eval_task, tutor_task)
         else:

@@ -1,4 +1,5 @@
 from app.agents.base import call_qwen, parse_json_response
+from app.agents.final_evaluator import _render_worksheet
 from app.prompts import PromptRegistry
 
 
@@ -9,6 +10,7 @@ async def evaluate_need_for_intervention(
     completion_rate: float,
     last_student_message_time: float | None,
     student_message_count: int,
+    worksheet: dict | None = None,
 ) -> dict:
     """Evaluate if tutor should intervene. """
     no_intervention = {
@@ -42,7 +44,14 @@ async def evaluate_need_for_intervention(
         for m in recent_conversation
     )
 
-    context_msg = f"""## 对话记录（最近）
+    worksheet_block = _render_worksheet(
+        worksheet if isinstance(worksheet, dict) else None
+    )
+
+    context_msg = f"""## 学生填写的临床表单（笔记汇总：主诉、现病史、查体、鉴别、诊断与处置等已填栏位）
+{worksheet_block}
+
+## 对话记录（最近）
 {conv_text}
 
 ## 统计信息（仅供你判断参考，不要在提示中提及）
@@ -60,7 +69,7 @@ async def evaluate_need_for_intervention(
         response = await call_qwen(
             system_prompt=system_prompt,
             messages=messages,
-            temperature=0.3,
+            temperature=0.5,
             response_format="json",
         )
         result = parse_json_response(response)

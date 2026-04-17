@@ -9,7 +9,11 @@ from pathlib import Path
 
 import yaml
 
-from app.agents.base import call_qwen, parse_json_response
+from app.agents.base import (
+    FINAL_EVALUATION_LLM_TIMEOUT_SECONDS,
+    call_qwen,
+    parse_json_response,
+)
 from app.evaluation.checklist import load_rubrics
 from app.prompts import PromptRegistry
 
@@ -220,6 +224,7 @@ async def evaluate_exam(
             messages=[{"role": "user", "content": user_msg}],
             temperature=0.2,
             response_format="json",
+            timeout=FINAL_EVALUATION_LLM_TIMEOUT_SECONDS,
         )
     except Exception as exc:
         return _empty_result_with_error(f"LLM 调用失败: {exc}"), ""
