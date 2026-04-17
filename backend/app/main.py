@@ -25,6 +25,11 @@ logger = logging.getLogger(__name__)
 active_sessions: dict[uuid.UUID, SessionOrchestrator] = {}
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 async def _create_db_schema() -> None:
     try:
         async with engine.begin() as conn:
