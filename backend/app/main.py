@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import os
 import sys
@@ -7,11 +6,10 @@ import uuid
 from contextlib import asynccontextmanager
 from urllib.parse import urlparse
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 # 尽早配置日志，确保 Railway deploy log 能看到所有启动信息
 logging.basicConfig(
@@ -28,11 +26,26 @@ logger.info("Python %s | PID %s | cwd=%s", sys.version, os.getpid(), os.getcwd()
 logger.info("PORT env: %s", os.environ.get("PORT", "(not set, default 8000)"))
 
 from app.config import get_settings
-from app.database import engine, Base, get_db, async_session
-from app.api import auth, cases, sessions, analytics
-from app.agents.orchestrator import SessionOrchestrator
+from app.database import engine, Base, async_session
+from app.api import (
+    auth,
+    cases,
+    sessions,
+    analytics,
+    methods,
+    control,
+    surveys,
+    prompts,
+    final_evaluations,
+)
 from app.models.user import User
 from app.models.session import TrainingSession
+from app.prompts import PromptRegistry
+from app.sessions import (
+    SessionStrategy,
+    MultiAgentSession,
+    ExamSession,
+)
 
 settings = get_settings()
 
@@ -47,8 +60,16 @@ def _safe_db_url(url: str) -> str:
         pass
     return url
 
+
 # In-memory registry of active orchestrators (keyed by session_id)
-active_sessions: dict[uuid.UUID, SessionOrchestrator] = {}
+active_sessions: dict[uuid.UUID, SessionStrategy] = {}
+
+
+def _build_strategy(method: str, *, session_id, case_id, user_id) -> SessionStrategy:
+    method = (method or "multi_agent").lower()
+    if method == "exam":
+        return ExamSession(session_id=session_id, case_id=case_id, user_id=user_id)
+    return MultiAgentSession(session_id=session_id, case_id=case_id, user_id=user_id)
 
 
 async def _create_db_schema() -> None:
@@ -58,8 +79,18 @@ async def _create_db_schema() -> None:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("DB schema init: success")
     except Exception as exc:
-        # 不阻塞进程启动，具体错误会打印到 Railway deploy log
         logger.exception("DB schema init FAILED — type=%s msg=%s", type(exc).__name__, exc)
+        return
+
+    # 装载 prompt 默认值并 seed 到 DB（仅当 DB 中尚无 active 行时）
+    try:
+        PromptRegistry.load_yaml_defaults()
+        async with async_session() as db:
+            await PromptRegistry.seed_db_from_yaml(db)
+            await PromptRegistry.reload_from_db(db)
+        logger.info("Prompt registry: seeded & reloaded (versions=%s)", PromptRegistry.all_versions())
+    except Exception as exc:
+        logger.exception("Prompt registry init FAILED — type=%s msg=%s", type(exc).__name__, exc)
 
 
 @asynccontextmanager
@@ -70,21 +101,28 @@ async def lifespan(app: FastAPI):
     logger.info("DASHSCOPE_KEY: %s", "SET" if settings.DASHSCOPE_API_KEY else "EMPTY — LLM calls will fail")
     logger.info("JWT_SECRET   : %s", "SET" if settings.JWT_SECRET not in ("change-me-in-production", "your-jwt-secret-change-me") else "DEFAULT (change in production)")
 
+    # 提前装载 YAML（即使 DB seed 还没跑完，agent 也能用 YAML 默认值响应）
+    try:
+        PromptRegistry.load_yaml_defaults()
+        logger.info("Prompt YAML defaults loaded: %s", list(PromptRegistry.all_versions()))
+    except Exception:
+        logger.exception("Prompt YAML defaults load failed at startup")
+
     # Fire-and-forget: schema init runs in the background so the app can
     # respond to healthchecks immediately without waiting for the DB.
     asyncio.create_task(_create_db_schema())
     try:
-        logger.info("=== SPAgent backend ready, accepting requests ===")
+        logger.info("=== Medu-SPAgent backend ready, accepting requests ===")
         yield
     finally:
-        logger.info("=== SPAgent backend shutting down ===")
+        logger.info("=== Medu-SPAgent backend shutting down ===")
         await engine.dispose()
 
 
 app = FastAPI(
-    title="SPAgent - 医学教育智能训练系统",
-    description="基于三智能体协作架构的标准化病人训练平台",
-    version="1.0.0",
+    title="Medu-SPAgent — Medical Education SP Agent",
+    description="AI 标准化病人多智能体训练 / 对照学习 / 考试 / 后测 一体化研究平台",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -98,6 +136,13 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(cases.router)
+app.include_router(methods.router)
+app.include_router(surveys.router)
+app.include_router(prompts.router)
+# 注意：control + final_evaluations 必须在 sessions.router 之前注册，否则
+# `/api/sessions/{session_id}` 会先匹配 `control` 字符串导致 422。
+app.include_router(control.router)
+app.include_router(final_evaluations.router)
 app.include_router(sessions.router)
 app.include_router(analytics.router)
 
@@ -105,12 +150,11 @@ app.include_router(analytics.router)
 @app.get("/health")
 async def health_check():
     """轻量健康检查：只确认进程存活，不等 DB。"""
-    return {"status": "ok", "service": "SPAgent"}
+    return {"status": "ok", "service": "Medu-SPAgent"}
 
 
 @app.get("/health/detailed")
 async def health_check_detailed():
-    """详细健康检查：同时测试数据库连通性，用于手动诊断。"""
     db_status = "unknown"
     db_error: str | None = None
     try:
@@ -124,9 +168,10 @@ async def health_check_detailed():
 
     return {
         "status": "ok",
-        "service": "SPAgent",
+        "service": "Medu-SPAgent",
         "database": db_status,
         "database_url": _safe_db_url(settings.DATABASE_URL),
+        "prompt_versions": PromptRegistry.all_versions(),
         **({"database_error": db_error} if db_error else {}),
     }
 
@@ -149,7 +194,6 @@ async def _authenticate_ws(token: str) -> User | None:
 async def websocket_consultation(websocket: WebSocket):
     await websocket.accept()
 
-    # Expect first message to be auth
     try:
         auth_msg = await websocket.receive_json()
         token = auth_msg.get("token", "")
@@ -168,7 +212,7 @@ async def websocket_consultation(websocket: WebSocket):
             pass
         return
 
-    orchestrator: SessionOrchestrator | None = None
+    orchestrator: SessionStrategy | None = None
 
     try:
         while True:
@@ -177,17 +221,27 @@ async def websocket_consultation(websocket: WebSocket):
 
             if msg_type == "start_session":
                 case_id = data.get("case_id", "")
+                method = (data.get("method") or "multi_agent").lower()
+                if method == "control":
+                    await websocket.send_json({
+                        "type": "error",
+                        "content": "对照学习模式不通过 WebSocket 启动，请改用 /api/sessions/control/start REST 接口",
+                    })
+                    continue
+
                 async with async_session() as db:
                     session = TrainingSession(
                         user_id=user.id,
                         case_id=case_id,
+                        method=method,
                     )
                     db.add(session)
                     await db.commit()
                     await db.refresh(session)
                     session_id = session.id
 
-                orchestrator = SessionOrchestrator(
+                orchestrator = _build_strategy(
+                    method,
                     session_id=session_id,
                     case_id=case_id,
                     user_id=user.id,
@@ -199,6 +253,7 @@ async def websocket_consultation(websocket: WebSocket):
                     "type": "session_started",
                     "session_id": str(session_id),
                     "case_id": case_id,
+                    "method": method,
                 })
                 await websocket.send_json(opening)
 

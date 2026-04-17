@@ -12,6 +12,8 @@ class TrainingSession(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)
     case_id: Mapped[str] = mapped_column(String(100), index=True)
+    # 训练方法：multi_agent | control | exam
+    method: Mapped[str] = mapped_column(String(20), default="multi_agent", server_default="multi_agent", index=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     total_messages: Mapped[int] = mapped_column(Integer, default=0)
@@ -21,7 +23,17 @@ class TrainingSession(Base):
     checklist_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     pre_survey_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     post_survey_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # 本会话使用的 prompt 版本快照，例如 {"sp_agent": "v2", "tutor_agent": "v1", ...}
+    prompt_versions_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     user = relationship("User", back_populates="sessions")
-    messages = relationship("Message", back_populates="session", lazy="selectin", order_by="Message.timestamp")
+    messages = relationship(
+        "Message", back_populates="session", lazy="selectin", order_by="Message.timestamp"
+    )
     snapshots = relationship("EvaluationSnapshot", back_populates="session", lazy="selectin")
+    final_evaluation = relationship(
+        "FinalEvaluation", back_populates="session", uselist=False, lazy="selectin"
+    )
+    ct_steps = relationship(
+        "CTStep", back_populates="session", lazy="selectin", order_by="CTStep.stage_index"
+    )

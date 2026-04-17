@@ -51,7 +51,7 @@ export default function Consultation({ user }: Props) {
 
   useEffect(() => {
     if (ws.connected && caseId && !sessionActive && !sessionEnded) {
-      ws.startSession(caseId);
+      ws.startSession(caseId, { method: "multi_agent" });
     }
   }, [ws.connected, caseId, sessionActive, sessionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
 

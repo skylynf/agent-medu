@@ -1,0 +1,22 @@
+instrument: open_ended
+display_name: "开放性反馈"
+description: "请用 1-3 句话回答下列问题。所有问题均可选填，但建议尽量回答。"
+items:
+  - id: oe_helpful
+    text: "你认为本系统对你的临床问诊学习最有帮助的方面是什么？"
+    placeholder: "例如：导师提示让我意识到自己漏问的关键信息。"
+  - id: oe_unhelpful
+    text: "你觉得系统中哪些功能或环节最不实用，或体验不佳？"
+    placeholder: ""
+  - id: oe_trust_sp
+    text: "你对 AI 模拟病人 (AI-SP) 的真实感与可信度评价如何？"
+    placeholder: ""
+  - id: oe_reasoning_impact
+    text: "使用本系统是否影响了你的临床思维或鉴别诊断习惯？请举例说明。"
+    placeholder: ""
+  - id: oe_compare_methods
+    text: "如果你既体验了多智能体学习又体验了对照学习，请比较两者的差异和你的偏好。"
+    placeholder: ""
+  - id: oe_suggestions
+    text: "对系统未来改进的建议。"
+    placeholder: ""

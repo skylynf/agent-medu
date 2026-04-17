@@ -18,6 +18,8 @@ export interface WSMessage {
   };
   session_id?: string;
   case_id?: string;
+  method?: string;
+  exam_mode?: boolean;
   final_score?: number;
   report?: Record<string, any>;
   // session_summary fields
@@ -28,7 +30,16 @@ export interface WSMessage {
   critical_missed?: string[];
   strengths?: string[];
   improvements?: string[];
+  // exam summary extras
+  checklist_results?: Record<string, boolean>;
+  holistic_scores?: Record<string, number>;
+  diagnosis_given?: string | null;
+  diagnosis_correct?: boolean;
+  differentials_given?: string[];
+  narrative_feedback?: string;
 }
+
+export type SessionMethod = "multi_agent" | "exam";
 
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
@@ -85,8 +96,12 @@ export function useWebSocket() {
   }, []);
 
   const startSession = useCallback(
-    (caseId: string) => {
-      send({ type: "start_session", case_id: caseId });
+    (caseId: string, opts: { method?: SessionMethod } = {}) => {
+      send({
+        type: "start_session",
+        case_id: caseId,
+        method: opts.method || "multi_agent",
+      });
     },
     [send]
   );

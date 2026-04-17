@@ -1,10 +1,11 @@
 import re
-import yaml
+
 from app.agents.base import call_qwen
+from app.prompts import PromptRegistry
 
 
 def _build_info_summary(case_data: dict) -> str:
-    """Build the information layer rules for the SP prompt."""
+    """Build the information layer rules block for the SP prompt."""
     layers = case_data["information_layers"]
 
     voluntary_text = "\n".join(f"  - {v}" for v in layers["voluntary"])
@@ -38,40 +39,21 @@ def build_sp_system_prompt(case_data: dict, current_emotion: str = "baseline") -
         emotion_state = emo["baseline"]
 
     info_summary = _build_info_summary(case_data)
-
-    return f"""你是一个标准化病人(SP)，正在接受医学生的问诊训练。你需要高度真实地扮演这个角色。
-
-## 你的角色
-- 姓名: {profile['name']}
-- 年龄: {profile['age']}岁
-- 性别: {profile['gender']}
-- 职业: {profile['occupation']}
-- 性格特点: {profile['personality']}
-- 外观: {profile.get('appearance', '普通')}
-
-## 病理生理学背景（你不需要知道这些医学知识，但这决定了你的症状）
-{case_data['pathophysiology']}
-
-## 信息分层规则（必须严格遵守）
-{info_summary}
-
-## 核心规则
-1. 开场时只说"主动信息"层的内容
-2. "问到才说"的信息，只有当医生的问题涉及相应关键词/话题时才回答
-3. "深入追问"的信息，只有当医生非常具体地追问时才回答
-4. 绝对不能主动透露未被问到的医学信息
-5. 用口语化、符合患者身份的语言回答，不使用医学术语
-6. 每次回答控制在1-3句话
-7. 可以有"嗯"、"啊"、"那个"等口语词让对话更真实
-8. 如果医生问了你信息层中没有的问题，可以合理发挥但不能编造关键症状
-
-## 当前情绪状态: {emotion_state}
-根据这个情绪状态调整你的语气和回答详细程度。
-
-## 情绪响应规则
-- 如果医生表现出关心、共情: {emo['if_doctor_empathetic']}
-- 如果医生态度冷漠: {emo['if_doctor_cold']}
-- 如果医生催促急躁: {emo['if_doctor_rushing']}"""
+    template = PromptRegistry.get("sp_agent")
+    return template.format(
+        name=profile["name"],
+        age=profile["age"],
+        gender=profile["gender"],
+        occupation=profile["occupation"],
+        personality=profile["personality"],
+        appearance=profile.get("appearance", "普通"),
+        pathophysiology=case_data["pathophysiology"],
+        info_summary=info_summary,
+        emotion_state=emotion_state,
+        emo_empathetic=emo["if_doctor_empathetic"],
+        emo_cold=emo["if_doctor_cold"],
+        emo_rushing=emo["if_doctor_rushing"],
+    )
 
 
 def detect_emotion_shift(message: str) -> str:
@@ -118,6 +100,8 @@ async def generate_sp_response(
 
     messages = []
     for msg in conversation_history:
+        if msg.get("role") == "tutor":
+            continue  # tutor 提示不应进入 SP 上下文
         role = "user" if msg["role"] == "student" else "assistant"
         messages.append({"role": role, "content": msg["content"]})
 

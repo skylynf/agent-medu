@@ -1,0 +1,36 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Virtual envs ---
+backend/venv/
+backend/.venv/
+.venv/
+venv/
+
+# --- Environment ---
+.env
+.env.*
+!.env.example
+
+# --- Node / Vite ---
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/node_modules/
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Local artifacts ---
+*.log
+*.sqlite
+*.sqlite3

@@ -1,0 +1,46 @@
+instrument: sus
+display_name: "系统可用性量表 (SUS)"
+description: |
+  Brooke (1996) 提出的标准 10 题 System Usability Scale 中文翻译。
+  评分 1=非常不同意，5=非常同意；奇数题为正向，偶数题为反向。
+scale:
+  type: likert
+  min: 1
+  max: 5
+  labels:
+    "1": "非常不同意"
+    "2": "不同意"
+    "3": "中立"
+    "4": "同意"
+    "5": "非常同意"
+items:
+  - id: sus_q1
+    text: "我愿意经常使用这个系统。"
+    reverse: false
+  - id: sus_q2
+    text: "我觉得这个系统过于复杂。"
+    reverse: true
+  - id: sus_q3
+    text: "我觉得这个系统易于使用。"
+    reverse: false
+  - id: sus_q4
+    text: "我觉得我需要技术人员的支持才能使用这个系统。"
+    reverse: true
+  - id: sus_q5
+    text: "我觉得系统中的各项功能整合得很好。"
+    reverse: false
+  - id: sus_q6
+    text: "我觉得这个系统中存在太多前后不一致的地方。"
+    reverse: true
+  - id: sus_q7
+    text: "我可以想象大多数人能很快学会使用这个系统。"
+    reverse: false
+  - id: sus_q8
+    text: "我觉得这个系统使用起来很麻烦。"
+    reverse: true
+  - id: sus_q9
+    text: "使用这个系统时我感到很有信心。"
+    reverse: false
+  - id: sus_q10
+    text: "在使用这个系统之前，我需要学习很多东西。"
+    reverse: true
