@@ -1,0 +1,8 @@
+user_id,L_duration_seconds,L_n_messages,L_n_student_msgs,L_mean_student_msg_chars,L_weighted_score_pct,L_completion_rate,L_items_checked,L_snap_final_completion,L_ct_stages_completed,L_ct_total_chars,E_final_score,E_osce_history_completeness,E_osce_communication,E_osce_clinical_reasoning,E_osce_diagnostic_accuracy,E_osce_total,E_weighted_score_pct,E_completion_rate,E_items_checked,E_missed_critical,E_duration_seconds,E_n_student_msgs,S_sus_total,S_ues_overall,S_ues_fa_mean,S_ues_pu_mean,S_ues_ae_mean,S_ues_rw_mean
+44a12258-5c9f-40be-aafb-2343133bfd81,121.67003199999999,2.0,1.0,9.75,7.272,0.06666,1.6,0.08325,,,,,,,,,,,,,,,,,,,,
+5bf00c5e-c2c6-48e3-ae3c-e1808de1efb1,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+634be785-a708-40a5-bc21-f4131ce0cc0a,247.5391755,9.666666666666666,4.666666666666667,10.055555555555555,18.9375,0.1979,4.75,0.26366666666666666,,,18.2,1.0,2.0,2.0,3.0,8.0,18.18,0.2083,5.0,2.0,207.64528,4.0,87.5,16.514285714285712,3.7142857142857144,3.5,4.8,4.5
+6cf3eaa5-9b23-497c-a389-d5f579b2eaaf,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+8c2e16e0-5cd8-4b54-9803-631b98bc50ea,111.17751618181819,9.25,4.25,19.90833333333333,21.21153846153846,0.1955076923076923,4.6923076923076925,0.363,4.0,17.5,27.23333333333333,1.6666666666666667,1.3333333333333333,1.3333333333333333,1.0,5.333333333333333,27.27,0.24996666666666667,6.0,1.3333333333333333,107.602099,2.0,100.0,19.0,5.0,4.0,5.0,5.0
+935638fa-2000-456f-814d-40febe3ee8f2,59.695242,,,,0.0,0.0,0.0,,,,,,,,,,,,,,,,,,,,,
+d0b93ff7-c534-4c36-aa8a-c55de552900a,401.437105,,,,0.0,0.0,0.0,,2.0,10.0,,,,,,,,,,,,,,,,,,

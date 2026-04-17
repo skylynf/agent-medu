@@ -1,0 +1,544 @@
+{
+  "title": "Survey outcomes — SUS & UES",
+  "n_students": 3,
+  "completion_rate": {
+    "sus_complete_rate": 0.333,
+    "ues_complete_rate": 0.333
+  },
+  "descriptive": {
+    "sus_total": [
+      {
+        "group": "MA",
+        "n": 1,
+        "mean": 87.5,
+        "sd": 0.0,
+        "sem": 0.0,
+        "median": 87.5,
+        "q1": 87.5,
+        "q3": 87.5,
+        "iqr": 0.0,
+        "min": 87.5,
+        "max": 87.5,
+        "ci_low": 87.5,
+        "ci_high": 87.5
+      }
+    ],
+    "ues_overall": [
+      {
+        "group": "MA",
+        "n": 1,
+        "mean": 16.5143,
+        "sd": 0.0,
+        "sem": 0.0,
+        "median": 16.5143,
+        "q1": 16.5143,
+        "q3": 16.5143,
+        "iqr": 0.0,
+        "min": 16.5143,
+        "max": 16.5143,
+        "ci_low": 16.5143,
+        "ci_high": 16.5143
+      }
+    ],
+    "ues_fa_mean": [
+      {
+        "group": "MA",
+        "n": 1,
+        "mean": 3.7143,
+        "sd": 0.0,
+        "sem": 0.0,
+        "median": 3.7143,
+        "q1": 3.7143,
+        "q3": 3.7143,
+        "iqr": 0.0,
+        "min": 3.7143,
+        "max": 3.7143,
+        "ci_low": 3.7143,
+        "ci_high": 3.7143
+      }
+    ],
+    "ues_pu_mean": [
+      {
+        "group": "MA",
+        "n": 1,
+        "mean": 3.5,
+        "sd": 0.0,
+        "sem": 0.0,
+        "median": 3.5,
+        "q1": 3.5,
+        "q3": 3.5,
+        "iqr": 0.0,
+        "min": 3.5,
+        "max": 3.5,
+        "ci_low": 3.5,
+        "ci_high": 3.5
+      }
+    ],
+    "ues_ae_mean": [
+      {
+        "group": "MA",
+        "n": 1,
+        "mean": 4.8,
+        "sd": 0.0,
+        "sem": 0.0,
+        "median": 4.8,
+        "q1": 4.8,
+        "q3": 4.8,
+        "iqr": 0.0,
+        "min": 4.8,
+        "max": 4.8,
+        "ci_low": 4.8,
+        "ci_high": 4.8
+      }
+    ],
+    "ues_rw_mean": [
+      {
+        "group": "MA",
+        "n": 1,
+        "mean": 4.5,
+        "sd": 0.0,
+        "sem": 0.0,
+        "median": 4.5,
+        "q1": 4.5,
+        "q3": 4.5,
+        "iqr": 0.0,
+        "min": 4.5,
+        "max": 4.5,
+        "ci_low": 4.5,
+        "ci_high": 4.5
+      }
+    ]
+  },
+  "tests": {
+    "sus_total": {
+      "groups": {
+        "MA": {
+          "n": 1,
+          "mean": 87.5,
+          "sd": 0.0,
+          "sem": 0.0,
+          "median": 87.5,
+          "q1": 87.5,
+          "q3": 87.5,
+          "iqr": 0.0,
+          "min": 87.5,
+          "max": 87.5,
+          "ci_low": 87.5,
+          "ci_high": 87.5
+        }
+      },
+      "omnibus": {
+        "test": null,
+        "p": null,
+        "note": "<2 groups"
+      },
+      "posthoc": []
+    },
+    "ues_overall": {
+      "groups": {
+        "MA": {
+          "n": 1,
+          "mean": 16.5143,
+          "sd": 0.0,
+          "sem": 0.0,
+          "median": 16.5143,
+          "q1": 16.5143,
+          "q3": 16.5143,
+          "iqr": 0.0,
+          "min": 16.5143,
+          "max": 16.5143,
+          "ci_low": 16.5143,
+          "ci_high": 16.5143
+        }
+      },
+      "omnibus": {
+        "test": null,
+        "p": null,
+        "note": "<2 groups"
+      },
+      "posthoc": []
+    },
+    "ues_fa_mean": {
+      "groups": {
+        "MA": {
+          "n": 1,
+          "mean": 3.7143,
+          "sd": 0.0,
+          "sem": 0.0,
+          "median": 3.7143,
+          "q1": 3.7143,
+          "q3": 3.7143,
+          "iqr": 0.0,
+          "min": 3.7143,
+          "max": 3.7143,
+          "ci_low": 3.7143,
+          "ci_high": 3.7143
+        }
+      },
+      "omnibus": {
+        "test": null,
+        "p": null,
+        "note": "<2 groups"
+      },
+      "posthoc": []
+    },
+    "ues_pu_mean": {
+      "groups": {
+        "MA": {
+          "n": 1,
+          "mean": 3.5,
+          "sd": 0.0,
+          "sem": 0.0,
+          "median": 3.5,
+          "q1": 3.5,
+          "q3": 3.5,
+          "iqr": 0.0,
+          "min": 3.5,
+          "max": 3.5,
+          "ci_low": 3.5,
+          "ci_high": 3.5
+        }
+      },
+      "omnibus": {
+        "test": null,
+        "p": null,
+        "note": "<2 groups"
+      },
+      "posthoc": []
+    },
+    "ues_ae_mean": {
+      "groups": {
+        "MA": {
+          "n": 1,
+          "mean": 4.8,
+          "sd": 0.0,
+          "sem": 0.0,
+          "median": 4.8,
+          "q1": 4.8,
+          "q3": 4.8,
+          "iqr": 0.0,
+          "min": 4.8,
+          "max": 4.8,
+          "ci_low": 4.8,
+          "ci_high": 4.8
+        }
+      },
+      "omnibus": {
+        "test": null,
+        "p": null,
+        "note": "<2 groups"
+      },
+      "posthoc": []
+    },
+    "ues_rw_mean": {
+      "groups": {
+        "MA": {
+          "n": 1,
+          "mean": 4.5,
+          "sd": 0.0,
+          "sem": 0.0,
+          "median": 4.5,
+          "q1": 4.5,
+          "q3": 4.5,
+          "iqr": 0.0,
+          "min": 4.5,
+          "max": 4.5,
+          "ci_low": 4.5,
+          "ci_high": 4.5
+        }
+      },
+      "omnibus": {
+        "test": null,
+        "p": null,
+        "note": "<2 groups"
+      },
+      "posthoc": []
+    }
+  },
+  "item_descriptive": {
+    "sus": [
+      {
+        "item": "sus_q1",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "sus_q2",
+        "group": "MA",
+        "n": 1,
+        "mean": 3.0,
+        "sd": null
+      },
+      {
+        "item": "sus_q3",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "sus_q4",
+        "group": "MA",
+        "n": 1,
+        "mean": 1.0,
+        "sd": null
+      },
+      {
+        "item": "sus_q5",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "sus_q6",
+        "group": "MA",
+        "n": 1,
+        "mean": 1.0,
+        "sd": null
+      },
+      {
+        "item": "sus_q7",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "sus_q8",
+        "group": "MA",
+        "n": 1,
+        "mean": 1.0,
+        "sd": null
+      },
+      {
+        "item": "sus_q9",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "sus_q10",
+        "group": "MA",
+        "n": 1,
+        "mean": 3.0,
+        "sd": null
+      }
+    ],
+    "ues": [
+      {
+        "item": "ues_fa1",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_fa2",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_fa3",
+        "group": "MA",
+        "n": 1,
+        "mean": 3.0,
+        "sd": null
+      },
+      {
+        "item": "ues_fa4",
+        "group": "MA",
+        "n": 1,
+        "mean": 3.0,
+        "sd": null
+      },
+      {
+        "item": "ues_fa5",
+        "group": "MA",
+        "n": 1,
+        "mean": 3.0,
+        "sd": null
+      },
+      {
+        "item": "ues_fa6",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_fa7",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_pu1",
+        "group": "MA",
+        "n": 1,
+        "mean": 2.0,
+        "sd": null
+      },
+      {
+        "item": "ues_pu2",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_pu3",
+        "group": "MA",
+        "n": 1,
+        "mean": 2.0,
+        "sd": null
+      },
+      {
+        "item": "ues_pu4",
+        "group": "MA",
+        "n": 1,
+        "mean": 2.0,
+        "sd": null
+      },
+      {
+        "item": "ues_pu5",
+        "group": "MA",
+        "n": 1,
+        "mean": 2.0,
+        "sd": null
+      },
+      {
+        "item": "ues_pu6",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_pu7",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_pu8",
+        "group": "MA",
+        "n": 1,
+        "mean": 2.0,
+        "sd": null
+      },
+      {
+        "item": "ues_ae1",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_ae2",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_ae3",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_ae4",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_ae5",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw1",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw2",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw3",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw4",
+        "group": "MA",
+        "n": 1,
+        "mean": 4.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw5",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw6",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw7",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw8",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw9",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      },
+      {
+        "item": "ues_rw10",
+        "group": "MA",
+        "n": 1,
+        "mean": 5.0,
+        "sd": null
+      }
+    ]
+  }
+}

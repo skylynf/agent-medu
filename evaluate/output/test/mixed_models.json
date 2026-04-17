@@ -1,0 +1,44 @@
+{
+  "title": "Multivariable models — adjusting for case and student",
+  "models": {
+    "learning::duration_seconds": {
+      "note": "拟合失败：Singular matrix"
+    },
+    "learning::n_student_msgs": {
+      "note": "拟合失败：Singular matrix"
+    },
+    "learning::weighted_score_pct": {
+      "note": "拟合失败：Singular matrix"
+    },
+    "learning::completion_rate": {
+      "note": "拟合失败：Singular matrix"
+    },
+    "learning::items_checked": {
+      "note": "拟合失败：Singular matrix"
+    },
+    "exam::osce_total": {
+      "note": "样本不足 n=1"
+    },
+    "exam::weighted_score_pct": {
+      "note": "样本不足 n=1"
+    },
+    "exam::final_score": {
+      "note": "样本不足 n=1"
+    },
+    "exam::osce_history_completeness": {
+      "note": "样本不足 n=1"
+    },
+    "exam::osce_communication": {
+      "note": "样本不足 n=1"
+    },
+    "exam::osce_clinical_reasoning": {
+      "note": "样本不足 n=1"
+    },
+    "exam::osce_diagnostic_accuracy": {
+      "note": "样本不足 n=1"
+    },
+    "exam::diagnosis_correct (logit)": {
+      "note": "样本不足或组别不足 (n=1)"
+    }
+  }
+}

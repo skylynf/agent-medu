@@ -1,0 +1,149 @@
+{
+  "title": "Cohort flow & pipeline integrity",
+  "summary": {
+    "n_students": 7,
+    "n_consent_given": 0,
+    "n_sessions_total": 29,
+    "n_learning_sessions": 25,
+    "n_exam_sessions": 4,
+    "groups_supported": [
+      "multi_agent",
+      "single_agent",
+      "control"
+    ],
+    "exam_method": "exam"
+  },
+  "groups": [
+    {
+      "group": "MIXED",
+      "group_label": "MIXED",
+      "n_students": 2
+    },
+    {
+      "group": "multi_agent",
+      "group_label": "MA",
+      "n_students": 3
+    },
+    {
+      "group": NaN,
+      "group_label": NaN,
+      "n_students": 2
+    }
+  ],
+  "pipeline_completeness": [
+    {
+      "group": "MIXED",
+      "n_total": 2,
+      "n_pipeline_complete": 1,
+      "mean_n_learning": 7.5,
+      "mean_n_exam": 1.5,
+      "completeness_rate": 0.5
+    },
+    {
+      "group": "multi_agent",
+      "n_total": 3,
+      "n_pipeline_complete": 1,
+      "mean_n_learning": 3.3333333333333335,
+      "mean_n_exam": 0.3333333333333333,
+      "completeness_rate": 0.333
+    }
+  ],
+  "flagged_students": [
+    {
+      "user_id": "44a12258-5c9f-40be-aafb-2343133bfd81",
+      "username": "test",
+      "full_name": "test",
+      "group_label": "MA",
+      "n_learning_sessions": 5,
+      "n_exam_sessions": 0
+    },
+    {
+      "user_id": "935638fa-2000-456f-814d-40febe3ee8f2",
+      "username": "Li",
+      "full_name": "李",
+      "group_label": "MA",
+      "n_learning_sessions": 1,
+      "n_exam_sessions": 0
+    },
+    {
+      "user_id": "8c2e16e0-5cd8-4b54-9803-631b98bc50ea",
+      "username": "skylynf",
+      "full_name": "杨鹭鸣",
+      "group_label": "MIXED",
+      "n_learning_sessions": 13,
+      "n_exam_sessions": 3
+    },
+    {
+      "user_id": "d0b93ff7-c534-4c36-aa8a-c55de552900a",
+      "username": "test1",
+      "full_name": "test",
+      "group_label": "MIXED",
+      "n_learning_sessions": 2,
+      "n_exam_sessions": 0
+    },
+    {
+      "user_id": "5bf00c5e-c2c6-48e3-ae3c-e1808de1efb1",
+      "username": "researcher",
+      "full_name": "researcher",
+      "group_label": NaN,
+      "n_learning_sessions": 0,
+      "n_exam_sessions": 0
+    },
+    {
+      "user_id": "6cf3eaa5-9b23-497c-a389-d5f579b2eaaf",
+      "username": "teacher",
+      "full_name": "teacher",
+      "group_label": NaN,
+      "n_learning_sessions": 0,
+      "n_exam_sessions": 0
+    },
+    {
+      "user_id": "634be785-a708-40a5-bc21-f4131ce0cc0a",
+      "username": "Karol",
+      "full_name": "Karol Jia",
+      "group_label": "MA",
+      "n_learning_sessions": 4,
+      "n_exam_sessions": 1
+    }
+  ],
+  "learning_by_case": [
+    {
+      "group_label": "CT",
+      "acute_appendicitis": 2,
+      "acute_cholecystitis": 0,
+      "acute_pancreatitis": 0,
+      "intestinal_obstruction": 1,
+      "mesenteric_ischemia": 0
+    },
+    {
+      "group_label": "MA",
+      "acute_appendicitis": 14,
+      "acute_cholecystitis": 5,
+      "acute_pancreatitis": 1,
+      "intestinal_obstruction": 0,
+      "mesenteric_ischemia": 1
+    },
+    {
+      "group_label": "SA",
+      "acute_appendicitis": 0,
+      "acute_cholecystitis": 0,
+      "acute_pancreatitis": 0,
+      "intestinal_obstruction": 1,
+      "mesenteric_ischemia": 0
+    }
+  ],
+  "exam_by_case": [
+    {
+      "group_label": "MA",
+      "acute_appendicitis": 1,
+      "acute_cholecystitis": 0,
+      "intestinal_obstruction": 0
+    },
+    {
+      "group_label": "MIXED",
+      "acute_appendicitis": 0,
+      "acute_cholecystitis": 2,
+      "intestinal_obstruction": 1
+    }
+  ]
+}

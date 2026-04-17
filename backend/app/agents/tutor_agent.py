@@ -10,7 +10,7 @@ async def evaluate_need_for_intervention(
     last_student_message_time: float | None,
     student_message_count: int,
 ) -> dict:
-    """Evaluate if tutor should intervene. Heavily biased toward NOT intervening."""
+    """Evaluate if tutor should intervene. """
     no_intervention = {
         "should_intervene": False,
         "intervention_type": None,
@@ -51,7 +51,7 @@ async def evaluate_need_for_intervention(
 学生已提问次数: {student_message_count}
 尚未被问到的关键信息数: {len(unchecked_critical)}
 
-请判断是否需要干预。记住：默认是「不干预」。只有严重情况才介入。"""
+请判断是否需要干预。记住：默认是「不干预」。"""
 
     messages = [{"role": "user", "content": context_msg}]
     system_prompt = PromptRegistry.get("tutor_agent")

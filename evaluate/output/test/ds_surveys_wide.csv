@@ -1,0 +1,8 @@
+user_id,group,group_label,sus_complete,sus_total,sus_sus_q1,sus_sus_q2,sus_sus_q3,sus_sus_q4,sus_sus_q5,sus_sus_q6,sus_sus_q7,sus_sus_q8,sus_sus_q9,sus_sus_q10,ues_complete,ues_overall,ues_fa_mean,ues_pu_mean,ues_ae_mean,ues_rw_mean,ues_ues_fa1,ues_ues_fa2,ues_ues_fa3,ues_ues_fa4,ues_ues_fa5,ues_ues_fa6,ues_ues_fa7,ues_ues_pu1,ues_ues_pu2,ues_ues_pu3,ues_ues_pu4,ues_ues_pu5,ues_ues_pu6,ues_ues_pu7,ues_ues_pu8,ues_ues_ae1,ues_ues_ae2,ues_ues_ae3,ues_ues_ae4,ues_ues_ae5,ues_ues_rw1,ues_ues_rw2,ues_ues_rw3,ues_ues_rw4,ues_ues_rw5,ues_ues_rw6,ues_ues_rw7,ues_ues_rw8,ues_ues_rw9,ues_ues_rw10,oe_oe_helpful,oe_oe_unhelpful,oe_oe_trust_sp,oe_oe_reasoning_impact,oe_oe_compare_methods,oe_oe_suggestions
+44a12258-5c9f-40be-aafb-2343133bfd81,multi_agent,MA,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+935638fa-2000-456f-814d-40febe3ee8f2,multi_agent,MA,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+8c2e16e0-5cd8-4b54-9803-631b98bc50ea,MIXED,MIXED,1.0,100.0,5.0,1.0,5.0,1.0,5.0,1.0,5.0,1.0,5.0,1.0,1.0,19.0,5.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,1.0,1.0,1.0,1.0,1.0,5.0,3.0,3.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,1.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,,,,,,
+d0b93ff7-c534-4c36-aa8a-c55de552900a,MIXED,MIXED,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+5bf00c5e-c2c6-48e3-ae3c-e1808de1efb1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+6cf3eaa5-9b23-497c-a389-d5f579b2eaaf,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+634be785-a708-40a5-bc21-f4131ce0cc0a,multi_agent,MA,1.0,87.5,5.0,3.0,4.0,1.0,5.0,1.0,5.0,1.0,5.0,3.0,1.0,16.514285714285712,3.7142857142857144,3.5,4.8,4.5,5.0,4.0,3.0,3.0,3.0,4.0,4.0,2.0,4.0,2.0,2.0,2.0,4.0,4.0,2.0,5.0,5.0,4.0,5.0,5.0,5.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,,,,,,

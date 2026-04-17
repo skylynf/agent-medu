@@ -1,0 +1,3 @@
+group,n_total,n_pipeline_complete,mean_n_learning,mean_n_exam,completeness_rate
+MIXED,2,1,7.5,1.5,0.5
+multi_agent,3,1,3.3333333333333335,0.3333333333333333,0.333

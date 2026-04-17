@@ -1,0 +1,4 @@
+group_label,acute_appendicitis,acute_cholecystitis,acute_pancreatitis,intestinal_obstruction,mesenteric_ischemia
+CT,2,0,0,1,0
+MA,14,5,1,0,1
+SA,0,0,0,1,0

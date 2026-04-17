@@ -1,0 +1,109 @@
+{
+  "title": "Dialogue-level diagnostics (tutor / emotion / latency)",
+  "tutor_interventions": {
+    "n": 21,
+    "mean": 0.3333,
+    "sd": 1.1106,
+    "sem": 0.2423,
+    "median": 0.0,
+    "q1": 0.0,
+    "q3": 0.0,
+    "iqr": 0.0,
+    "min": 0.0,
+    "max": 5.0,
+    "ci_low": -0.1722,
+    "ci_high": 0.8389
+  },
+  "student_msg_chars": {
+    "groups": {
+      "MA": {
+        "n": 7,
+        "mean": 9.881,
+        "sd": 4.3956,
+        "sem": 1.6614,
+        "median": 10.5,
+        "q1": 6.0,
+        "q3": 12.8333,
+        "iqr": 6.8333,
+        "min": 5.0,
+        "max": 16.0,
+        "ci_low": 5.8157,
+        "ci_high": 13.9462
+      },
+      "MIXED": {
+        "n": 8,
+        "mean": 19.9083,
+        "sd": 14.0379,
+        "sem": 4.9631,
+        "median": 17.1333,
+        "q1": 11.25,
+        "q3": 23.875,
+        "iqr": 12.625,
+        "min": 5.0,
+        "max": 45.5,
+        "ci_low": 8.1724,
+        "ci_high": 31.6443
+      }
+    },
+    "omnibus": {
+      "test": "students_t",
+      "statistic": -1.8064828951599299,
+      "p": 0.09403556732273716,
+      "all_normal": true,
+      "equal_var": true
+    },
+    "effect_size": {
+      "mean_diff": -10.02738095238095,
+      "cohens_d": -0.9349437221181994,
+      "hedges_g": -0.8799470325818347,
+      "cliffs_delta": -0.5
+    },
+    "posthoc": []
+  },
+  "mean_latency_ms": {
+    "groups": {
+      "MA": {
+        "n": 3,
+        "mean": 27191.9762,
+        "sd": 15590.2824,
+        "sem": 9001.0537,
+        "median": 18460.0,
+        "q1": 18192.25,
+        "q3": 31825.7143,
+        "iqr": 13633.4643,
+        "min": 17924.5,
+        "max": 45191.4286,
+        "ci_low": -11536.4322,
+        "ci_high": 65920.3846
+      },
+      "MIXED": {
+        "n": 5,
+        "mean": 31330.7048,
+        "sd": 9828.4965,
+        "sem": 4395.4373,
+        "median": 29843.5,
+        "q1": 22521.3571,
+        "q3": 40745.0,
+        "iqr": 18223.6429,
+        "min": 21342.0,
+        "max": 42201.6667,
+        "ci_low": 19127.0145,
+        "ci_high": 43534.395
+      }
+    },
+    "omnibus": {
+      "test": "mann_whitney_u",
+      "statistic": 5.0,
+      "p": 0.5714285714285714,
+      "all_normal": false,
+      "equal_var": true
+    },
+    "effect_size": {
+      "mean_diff": -4138.7285714285645,
+      "cohens_d": -0.3432077367430161,
+      "hedges_g": -0.2984415102113183,
+      "cliffs_delta": -0.3333333333333333
+    },
+    "posthoc": []
+  }
+}

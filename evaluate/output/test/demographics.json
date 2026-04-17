@@ -1,0 +1,150 @@
+{
+  "title": "Demographics & baseline balance (Table 1)",
+  "groups": [
+    "multi_agent"
+  ],
+  "categorical_tables": {
+    "role": [
+      {
+        "role": "researcher",
+        "MA": 1,
+        "MIXED": 1
+      },
+      {
+        "role": "student",
+        "MA": 2,
+        "MIXED": 1
+      }
+    ],
+    "institution": [
+      {
+        "institution": "1",
+        "MA": 1,
+        "MIXED": 0
+      },
+      {
+        "institution": "OSU",
+        "MA": 0,
+        "MIXED": 1
+      },
+      {
+        "institution": "test",
+        "MA": 1,
+        "MIXED": 1
+      },
+      {
+        "institution": "西方科技大学",
+        "MA": 1,
+        "MIXED": 0
+      }
+    ],
+    "grade": [
+      {
+        "grade": "1",
+        "MA": 1,
+        "MIXED": 0
+      },
+      {
+        "grade": "test",
+        "MA": 1,
+        "MIXED": 1
+      },
+      {
+        "grade": "二",
+        "MA": 1,
+        "MIXED": 0
+      },
+      {
+        "grade": "大二",
+        "MA": 0,
+        "MIXED": 1
+      }
+    ],
+    "consent_given": [
+      {
+        "consent_given": false,
+        "MA": 3,
+        "MIXED": 2
+      }
+    ]
+  },
+  "categorical_tests": {
+    "role": {
+      "table": [
+        {
+          "MA": 1,
+          "MIXED": 1
+        },
+        {
+          "MA": 2,
+          "MIXED": 1
+        }
+      ],
+      "test": "fisher_exact",
+      "statistic": 0.5,
+      "p": 1.0
+    },
+    "institution": {
+      "table": [
+        {
+          "MA": 1,
+          "MIXED": 0
+        },
+        {
+          "MA": 0,
+          "MIXED": 1
+        },
+        {
+          "MA": 1,
+          "MIXED": 1
+        },
+        {
+          "MA": 1,
+          "MIXED": 0
+        }
+      ],
+      "test": "chi_square",
+      "statistic": 2.916666666666667,
+      "p": 0.40465279495160544,
+      "dof": 3,
+      "cramers_v": 0.7637626158259734
+    },
+    "grade": {
+      "table": [
+        {
+          "MA": 1,
+          "MIXED": 0
+        },
+        {
+          "MA": 1,
+          "MIXED": 1
+        },
+        {
+          "MA": 1,
+          "MIXED": 0
+        },
+        {
+          "MA": 0,
+          "MIXED": 1
+        }
+      ],
+      "test": "chi_square",
+      "statistic": 2.916666666666667,
+      "p": 0.40465279495160544,
+      "dof": 3,
+      "cramers_v": 0.7637626158259734
+    },
+    "consent_given": {
+      "table": [
+        {
+          "MA": 3,
+          "MIXED": 2
+        }
+      ],
+      "test": null,
+      "p": null,
+      "note": "table degenerate"
+    }
+  },
+  "continuous_descriptive": {}
+}

@@ -1,0 +1,73 @@
+{
+  "title": "Internal consistency reliability (Cronbach α)",
+  "sus": {
+    "overall": {
+      "alpha": 0.7111111111111111,
+      "n_items": 10,
+      "n_respondents": 2,
+      "interpretation": "acceptable"
+    },
+    "by_group": {
+      "MA": {
+        "alpha": null,
+        "n_items": 10,
+        "n_respondents": 1,
+        "note": "数据不足"
+      },
+      "MIXED": {
+        "alpha": null,
+        "n_items": 10,
+        "n_respondents": 1,
+        "note": "数据不足"
+      }
+    }
+  },
+  "ues": {
+    "overall": {
+      "alpha": 0.9112618206132391,
+      "n_items": 30,
+      "n_respondents": 2,
+      "interpretation": "excellent"
+    },
+    "by_subscale": {
+      "fa": {
+        "alpha": 0.9506172839506174,
+        "n_items": 7,
+        "n_respondents": 2,
+        "interpretation": "excellent"
+      },
+      "pu": {
+        "alpha": 0.0,
+        "n_items": 8,
+        "n_respondents": 2,
+        "interpretation": "unacceptable"
+      },
+      "ae": {
+        "alpha": 0.0,
+        "n_items": 5,
+        "n_respondents": 2,
+        "interpretation": "unacceptable"
+      },
+      "rw": {
+        "alpha": 0.6222222222222223,
+        "n_items": 10,
+        "n_respondents": 2,
+        "interpretation": "questionable"
+      }
+    },
+    "overall_by_group": {
+      "MA": {
+        "alpha": null,
+        "n_items": 30,
+        "n_respondents": 1,
+        "note": "数据不足"
+      },
+      "MIXED": {
+        "alpha": null,
+        "n_items": 30,
+        "n_respondents": 1,
+        "note": "数据不足"
+      }
+    }
+  }
+}

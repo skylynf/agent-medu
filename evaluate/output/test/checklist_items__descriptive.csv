@@ -1,0 +1,25 @@
+item,category,critical,group,n_yes,n_total,rate,ci_low,ci_high
+Aggravating/Alleviating 加重/缓解因素,现病史 (OLDCARTS),True,MA,0,1,0.0,0.0,0.7935
+Character 性质,现病史 (OLDCARTS),False,MA,0,1,0.0,0.0,0.7935
+Duration 持续时间,现病史 (OLDCARTS),False,MA,1,1,1.0,0.2065,1.0
+Location 部位,现病史 (OLDCARTS),True,MA,0,1,0.0,0.0,0.7935
+Onset 起病方式,现病史 (OLDCARTS),False,MA,0,1,0.0,0.0,0.7935
+Radiation 放射,现病史 (OLDCARTS),False,MA,0,1,0.0,0.0,0.7935
+Severity 严重程度,现病史 (OLDCARTS),False,MA,1,1,1.0,0.2065,1.0
+Timing/Temporal 时间规律,现病史 (OLDCARTS),False,MA,0,1,0.0,0.0,0.7935
+主要症状,主诉,False,MA,1,1,1.0,0.2065,1.0
+共情表达,沟通技巧,False,MA,0,1,0.0,0.0,0.7935
+发热,伴随症状,False,MA,0,1,0.0,0.0,0.7935
+家族消化系统疾病,家族史,False,MA,0,1,0.0,0.0,0.7935
+开放式提问使用,沟通技巧,False,MA,0,1,0.0,0.0,0.7935
+总结确认,沟通技巧,False,MA,0,1,0.0,0.0,0.7935
+恶心呕吐,伴随症状,False,MA,0,1,0.0,0.0,0.7935
+慢性病史,既往史,False,MA,0,1,0.0,0.0,0.7935
+手术史,既往史,False,MA,0,1,0.0,0.0,0.7935
+持续时间,主诉,False,MA,1,1,1.0,0.2065,1.0
+排便异常,伴随症状,False,MA,0,1,0.0,0.0,0.7935
+排尿异常,伴随症状,False,MA,0,1,0.0,0.0,0.7935
+既往类似发作,既往史,False,MA,0,1,0.0,0.0,0.7935
+自我介绍,沟通技巧,False,MA,1,1,1.0,0.2065,1.0
+药物过敏史,既往史,False,MA,0,1,0.0,0.0,0.7935
+诱因,主诉,False,MA,0,1,0.0,0.0,0.7935

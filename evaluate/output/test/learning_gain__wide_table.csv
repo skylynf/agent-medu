@@ -1,0 +1,8 @@
+user_id,method,completion_rate__s1,completion_rate__s2,ct_stages_completed__s1,ct_total_chars__s1,duration_seconds__s1,duration_seconds__s2,items_checked__s1,items_checked__s2,mean_student_msg_chars__s1,mean_student_msg_chars__s2,n_messages__s1,n_messages__s2,n_student_msgs__s1,n_student_msgs__s2,snap_final_completion__s1,snap_final_completion__s2,weighted_score_pct__s1,weighted_score_pct__s2,group_label,duration_seconds__delta,n_messages__delta,n_student_msgs__delta,mean_student_msg_chars__delta,weighted_score_pct__delta,completion_rate__delta,items_checked__delta,snap_final_completion__delta
+44a12258-5c9f-40be-aafb-2343133bfd81,multi_agent,0.0833,0.0,,,118.174729,25.085872,2.0,0.0,16.0,,2.0,,1.0,,0.083,,12.12,0.0,MA,-93.088857,,,,-12.12,-0.0833,-2.0,
+634be785-a708-40a5-bc21-f4131ce0cc0a,multi_agent,0.4583,0.0,,,392.175786,,11.0,0.0,10.5,,16.0,,8.0,,0.458,,45.45,0.0,MA,,,,,-45.45,-0.4583,-11.0,
+8c2e16e0-5cd8-4b54-9803-631b98bc50ea,control,0.0,,4.0,20.0,71.310805,,0.0,,,,,,,,,,0.0,,CT,,,,,,,,
+8c2e16e0-5cd8-4b54-9803-631b98bc50ea,multi_agent,,0.375,,,,135.07618,,9.0,,45.5,,4.0,,2.0,,0.375,,39.39,MA,,,,,,,,
+935638fa-2000-456f-814d-40febe3ee8f2,multi_agent,0.0,,,,59.695242,,0.0,,,,,,,,,,0.0,,MA,,,,,,,,
+d0b93ff7-c534-4c36-aa8a-c55de552900a,control,0.0,,2.0,10.0,,,0.0,,,,,,,,,,0.0,,CT,,,,,,,,
+d0b93ff7-c534-4c36-aa8a-c55de552900a,multi_agent,,0.0,,,,401.437105,,0.0,,,,,,,,,,0.0,MA,,,,,,,,
