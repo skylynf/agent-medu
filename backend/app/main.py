@@ -1,14 +1,31 @@
 import asyncio
 import json
 import logging
+import os
+import sys
 import uuid
 from contextlib import asynccontextmanager
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+
+# 尽早配置日志，确保 Railway deploy log 能看到所有启动信息
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    stream=sys.stdout,
+    force=True,
+)
+
+logger = logging.getLogger(__name__)
+
+# 在导入业务模块之前先打印 Python/环境信息，方便定位 ImportError
+logger.info("Python %s | PID %s | cwd=%s", sys.version, os.getpid(), os.getcwd())
+logger.info("PORT env: %s", os.environ.get("PORT", "(not set, default 8000)"))
 
 from app.config import get_settings
 from app.database import engine, Base, get_db, async_session
@@ -19,32 +36,48 @@ from app.models.session import TrainingSession
 
 settings = get_settings()
 
-logger = logging.getLogger(__name__)
+
+def _safe_db_url(url: str) -> str:
+    """把 URL 里的密码替换成 *** 用于日志输出。"""
+    try:
+        parsed = urlparse(url)
+        if parsed.password:
+            return url.replace(parsed.password, "***")
+    except Exception:
+        pass
+    return url
 
 # In-memory registry of active orchestrators (keyed by session_id)
 active_sessions: dict[uuid.UUID, SessionOrchestrator] = {}
 
 
 async def _create_db_schema() -> None:
+    logger.info("DB schema init: connecting to %s", _safe_db_url(settings.DATABASE_URL))
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        logger.info("database schema ready")
-    except Exception:
-        # 不阻塞进程启动，便于 Railway /health 先通过；具体错误看部署日志
-        logger.exception("database schema initialization failed")
+        logger.info("DB schema init: success")
+    except Exception as exc:
+        # 不阻塞进程启动，具体错误会打印到 Railway deploy log
+        logger.exception("DB schema init FAILED — type=%s msg=%s", type(exc).__name__, exc)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("=== SPAgent backend lifespan start ===")
+    logger.info("DATABASE_URL : %s", _safe_db_url(settings.DATABASE_URL))
+    logger.info("QWEN_MODEL   : %s", settings.QWEN_MODEL)
+    logger.info("DASHSCOPE_KEY: %s", "SET" if settings.DASHSCOPE_API_KEY else "EMPTY — LLM calls will fail")
+    logger.info("JWT_SECRET   : %s", "SET" if settings.JWT_SECRET not in ("change-me-in-production", "your-jwt-secret-change-me") else "DEFAULT (change in production)")
+
     # Fire-and-forget: schema init runs in the background so the app can
     # respond to healthchecks immediately without waiting for the DB.
     asyncio.create_task(_create_db_schema())
     try:
+        logger.info("=== SPAgent backend ready, accepting requests ===")
         yield
     finally:
-        # Do not await the init task here — it either finished already or
-        # we let it be cancelled naturally when the event loop shuts down.
+        logger.info("=== SPAgent backend shutting down ===")
         await engine.dispose()
 
 
@@ -71,7 +104,31 @@ app.include_router(analytics.router)
 
 @app.get("/health")
 async def health_check():
+    """轻量健康检查：只确认进程存活，不等 DB。"""
     return {"status": "ok", "service": "SPAgent"}
+
+
+@app.get("/health/detailed")
+async def health_check_detailed():
+    """详细健康检查：同时测试数据库连通性，用于手动诊断。"""
+    db_status = "unknown"
+    db_error: str | None = None
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as exc:
+        db_status = "error"
+        db_error = f"{type(exc).__name__}: {exc}"
+        logger.warning("Detailed health check — DB ping failed: %s", exc)
+
+    return {
+        "status": "ok",
+        "service": "SPAgent",
+        "database": db_status,
+        "database_url": _safe_db_url(settings.DATABASE_URL),
+        **({"database_error": db_error} if db_error else {}),
+    }
 
 
 async def _authenticate_ws(token: str) -> User | None:
