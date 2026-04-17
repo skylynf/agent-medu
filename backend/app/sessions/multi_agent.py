@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.evaluator_agent import evaluate_exchange
+from app.agents.final_evaluator import evaluate_exam
 from app.agents.sp_agent import generate_sp_response
 from app.agents.tutor_agent import evaluate_need_for_intervention
 from app.evaluation.checklist import (
@@ -21,13 +22,16 @@ from app.evaluation.checklist import (
     update_checklist,
 )
 from app.models.evaluation import EvaluationSnapshot
+from app.models.final_evaluation import FinalEvaluation
 from app.models.session import TrainingSession
+from app.prompts import PromptRegistry
 from app.sessions.base import SendFn, SessionStrategy
 
 
 class MultiAgentSession(SessionStrategy):
     METHOD = "multi_agent"
-    PROMPT_KEYS = ("sp_agent", "tutor_agent", "turn_evaluator")
+    # 结束时也会调用 final_evaluator（基于 worksheet + 全程对话）
+    PROMPT_KEYS = ("sp_agent", "tutor_agent", "turn_evaluator", "final_evaluator")
 
     TUTOR_COOLDOWN_MESSAGES = 4
     TUTOR_MAX_INTERVENTIONS = 4
@@ -196,6 +200,10 @@ class MultiAgentSession(SessionStrategy):
     async def end_session(self, db: AsyncSession) -> dict:
         score, completion_rate, missed_critical = compute_score(self.checklist)
 
+        # 拉取 worksheet
+        session_obj = await db.get(TrainingSession, self.session_id)
+        worksheet = (session_obj.worksheet_json if session_obj else None) or None
+
         started, ended = await self._close_session_record(
             db,
             final_score=score,
@@ -221,8 +229,44 @@ class MultiAgentSession(SessionStrategy):
         else:
             improvements.append(f"遗漏关键项: {', '.join(missed_critical)}")
 
+        # ---- 额外：worksheet 感知的整体诊断推理评估 ----
+        # 这一步可能会失败（LLM 超时 / 网络抖动），失败时仍能返回 live-checklist 总结。
+        final_eval_payload: dict | None = None
+        try:
+            fe_result, fe_raw = await evaluate_exam(
+                case_data=self.case_data,
+                conversation_history=self.conversation_history,
+                worksheet=worksheet,
+            )
+            existing = await db.execute(
+                FinalEvaluation.__table__.select().where(
+                    FinalEvaluation.session_id == self.session_id
+                )
+            )
+            if existing.first() is None:
+                db.add(
+                    FinalEvaluation(
+                        session_id=self.session_id,
+                        checklist_results_json=fe_result["checklist_results"],
+                        holistic_scores_json=fe_result["holistic_scores"],
+                        diagnosis_given=fe_result["diagnosis_given"],
+                        diagnosis_correct=fe_result["diagnosis_correct"],
+                        differentials_given_json=fe_result["differentials_given"],
+                        strengths_json=fe_result["strengths"],
+                        improvements_json=fe_result["improvements"],
+                        narrative_feedback=fe_result["narrative_feedback"],
+                        raw_llm_output=fe_raw,
+                        prompt_version=PromptRegistry.get_version("final_evaluator"),
+                    )
+                )
+                await db.flush()
+            final_eval_payload = fe_result
+        except Exception:
+            # 不让总评失败拖垮 MA 学习的最终响应；前端仍可看到 live-checklist 部分
+            final_eval_payload = None
+
         duration = int((ended - started).total_seconds())
-        return {
+        summary: dict = {
             "type": "session_summary",
             "method": self.METHOD,
             "session_id": str(self.session_id),
@@ -237,4 +281,18 @@ class MultiAgentSession(SessionStrategy):
             "critical_missed": missed_critical,
             "strengths": strengths,
             "improvements": improvements,
+            "worksheet": worksheet,
         }
+        if final_eval_payload:
+            summary.update(
+                {
+                    "holistic_scores": final_eval_payload["holistic_scores"],
+                    "diagnosis_given": final_eval_payload["diagnosis_given"],
+                    "diagnosis_correct": final_eval_payload["diagnosis_correct"],
+                    "differentials_given": final_eval_payload["differentials_given"],
+                    "narrative_feedback": final_eval_payload["narrative_feedback"],
+                    "final_eval_strengths": final_eval_payload["strengths"],
+                    "final_eval_improvements": final_eval_payload["improvements"],
+                }
+            )
+        return summary

@@ -21,6 +21,7 @@ class SessionResponse(BaseModel):
     final_score: float | None
     checklist_json: dict | None
     prompt_versions_json: dict | None = None
+    worksheet_json: dict | None = None
 
     model_config = {"from_attributes": True}
 

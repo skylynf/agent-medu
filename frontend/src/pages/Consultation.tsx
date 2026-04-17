@@ -6,6 +6,7 @@ import ChatPanel, { ChatMessage } from "../components/ChatPanel";
 import EvalSidebar from "../components/EvalSidebar";
 import TutorHint from "../components/TutorHint";
 import Timer from "../components/Timer";
+import WorksheetPanel from "../components/WorksheetPanel";
 
 interface Props {
   user: UserResponse;
@@ -25,10 +26,14 @@ export default function Consultation({ user }: Props) {
     content: string;
     level: string;
   } | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [summary, setSummary] = useState<WSMessage | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [sidebarTab, setSidebarTab] = useState<"eval" | "worksheet">("eval");
+  const isReconnectingRef = useRef(false);
   /** 已处理的 WS 事件条数（messages 保留全量，避免 lastMessage 被批量更新覆盖丢失） */
   const wsEventsProcessed = useRef(0);
 
@@ -50,10 +55,18 @@ export default function Consultation({ user }: Props) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (ws.connected && caseId && !sessionActive && !sessionEnded) {
+    if (!ws.connected || !caseId) return;
+    if (sessionEnded) return;
+    if (isReconnectingRef.current && sessionId) {
+      // 重连后优先尝试恢复原会话
+      ws.resumeSession(sessionId);
+      isReconnectingRef.current = false;
+      return;
+    }
+    if (!sessionActive) {
       ws.startSession(caseId, { method: "multi_agent" });
     }
-  }, [ws.connected, caseId, sessionActive, sessionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ws.connected, caseId, sessionActive, sessionEnded, sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const msgs = ws.messages;
@@ -72,6 +85,23 @@ export default function Consultation({ user }: Props) {
       switch (msg.type) {
         case "session_started":
           setSessionActive(true);
+          if (msg.session_id) setSessionId(msg.session_id);
+          break;
+
+        case "session_resumed":
+          setSessionActive(true);
+          setErrorBanner("已重新连接到原会话，可继续问诊。");
+          break;
+
+        case "session_expired":
+          // 服务器侧已不再持有该会话 → 用 case 重新开一局
+          setSessionActive(false);
+          setSessionId(null);
+          setChatMessages([]);
+          setChecklist(null);
+          setCompletionRate(0);
+          setScore(0);
+          setErrorBanner("原会话已失效，已为你开启新的问诊。");
           break;
 
         case "typing":
@@ -126,6 +156,7 @@ export default function Consultation({ user }: Props) {
 
         case "error":
           setIsTyping(false);
+          setErrorBanner(msg.content || "本轮处理失败，请稍后重试。");
           break;
 
         default:
@@ -136,15 +167,31 @@ export default function Consultation({ user }: Props) {
 
   const handleSend = useCallback(
     (content: string) => {
+      setErrorBanner(null);
       setIsTyping(true);
       setChatMessages((prev) => [
         ...prev,
         { role: "student", content, timestamp: Date.now() },
       ]);
-      ws.sendMessage(content);
+      const ok = ws.sendMessage(content);
+      if (!ok) {
+        setIsTyping(false);
+        setErrorBanner("连接已断开，无法发送。请点击「重新连接」后再试。");
+      }
     },
     [ws]
   );
+
+  const handleReconnect = useCallback(() => {
+    setErrorBanner(null);
+    setIsTyping(false);
+    isReconnectingRef.current = !!sessionId;
+    ws.disconnect();
+    setTimeout(() => ws.connect(), 150);
+  }, [ws, sessionId]);
+
+  const wsBroken =
+    sessionActive && !sessionEnded && (ws.status === "error" || ws.status === "closed");
 
   const handleEnd = () => {
     ws.endSession();
@@ -153,6 +200,7 @@ export default function Consultation({ user }: Props) {
   const patientName = caseInfo?.patient_profile?.name || "患者";
 
   if (summary) {
+    const hasFinalEval = summary.holistic_scores !== undefined;
     return (
       <div className="max-w-3xl mx-auto px-6 py-8">
         <div className="bg-white rounded-2xl shadow-lg p-8">
@@ -240,6 +288,51 @@ export default function Consultation({ user }: Props) {
             </div>
           )}
 
+          {hasFinalEval && (
+            <div className="mb-6 border border-slate-200 rounded-xl p-5 space-y-4">
+              <h4 className="text-sm font-semibold text-slate-700">
+                临床推理总评（基于对话 + 临床表单）
+              </h4>
+              {summary.holistic_scores && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {(
+                    [
+                      ["history_completeness", "病史完整性"],
+                      ["communication", "医患沟通"],
+                      ["clinical_reasoning", "临床推理"],
+                      ["diagnostic_accuracy", "诊断准确性"],
+                    ] as const
+                  ).map(([k, label]) => (
+                    <div key={k} className="bg-slate-50 rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-blue-600">
+                        {summary.holistic_scores?.[k] ?? "—"}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">{label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div
+                className={`rounded-lg p-3 text-sm ${
+                  summary.diagnosis_correct
+                    ? "bg-green-50 text-green-700"
+                    : "bg-amber-50 text-amber-700"
+                }`}
+              >
+                <span className="font-medium">学生诊断：</span>
+                {summary.diagnosis_given || "未给出"}
+                <span className="ml-2 text-xs">
+                  {summary.diagnosis_correct ? "（方向正确）" : "（不正确或未明确）"}
+                </span>
+              </div>
+              {summary.narrative_feedback && (
+                <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                  {summary.narrative_feedback}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button
               onClick={() => navigate("/cases")}
@@ -304,25 +397,88 @@ export default function Consultation({ user }: Props) {
           />
         )}
 
+        {/* Connection / error banner */}
+        {(wsBroken || errorBanner) && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between">
+            <div className="text-sm text-amber-800 flex items-center gap-2">
+              {wsBroken ? (
+                <>
+                  <span>&#9888;</span>
+                  <span>与服务器的连接已断开。</span>
+                </>
+              ) : (
+                <>
+                  <span>&#9888;</span>
+                  <span>{errorBanner}</span>
+                </>
+              )}
+            </div>
+            {wsBroken && (
+              <button
+                onClick={handleReconnect}
+                className="text-sm px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700"
+              >
+                重新连接
+              </button>
+            )}
+            {!wsBroken && errorBanner && (
+              <button
+                onClick={() => setErrorBanner(null)}
+                className="text-xs text-amber-700 hover:underline"
+              >
+                忽略
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Chat */}
         <div className="flex-1 min-h-0">
           <ChatPanel
             messages={chatMessages}
             onSend={handleSend}
-            disabled={!sessionActive}
+            disabled={!sessionActive || wsBroken}
             patientName={patientName}
             isTyping={isTyping}
           />
         </div>
       </div>
 
-      {/* Right: Eval Sidebar */}
-      <div className="w-80 border-l border-slate-200 bg-white overflow-hidden flex flex-col">
-        <EvalSidebar
-          checklist={checklist}
-          completionRate={completionRate}
-          score={score}
-        />
+      {/* Right: Eval / Worksheet Sidebar with tabs */}
+      <div className="w-96 border-l border-slate-200 bg-white overflow-hidden flex flex-col">
+        <div className="flex border-b border-slate-100">
+          <button
+            onClick={() => setSidebarTab("eval")}
+            className={`flex-1 px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              sidebarTab === "eval"
+                ? "border-medical text-medical"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            评估进度
+          </button>
+          <button
+            onClick={() => setSidebarTab("worksheet")}
+            className={`flex-1 px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              sidebarTab === "worksheet"
+                ? "border-medical text-medical"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            临床表单
+          </button>
+        </div>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {sidebarTab === "eval" ? (
+            <EvalSidebar
+              checklist={checklist}
+              completionRate={completionRate}
+              score={score}
+            />
+          ) : (
+            <WorksheetPanel sessionId={sessionId} readOnly={!sessionActive} />
+          )}
+        </div>
       </div>
     </div>
   );

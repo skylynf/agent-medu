@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import CaseSelect from "./pages/CaseSelect";
 import Consultation from "./pages/Consultation";
+import SingleAgent from "./pages/SingleAgent";
 import ControlLearning from "./pages/ControlLearning";
 import Exam from "./pages/Exam";
 import PostTest from "./pages/PostTest";
@@ -94,6 +95,10 @@ export default function App() {
           <Route
             path="/consultation/:caseId"
             element={user ? <Consultation user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/single/:caseId"
+            element={user ? <SingleAgent user={user} /> : <Navigate to="/login" />}
           />
           <Route
             path="/control/:caseId"

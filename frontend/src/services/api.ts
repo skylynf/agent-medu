@@ -66,6 +66,28 @@ export interface SessionResponse {
   final_score: number | null;
   checklist_json: Record<string, any> | null;
   prompt_versions_json?: Record<string, any> | null;
+  worksheet_json?: Record<string, any> | null;
+}
+
+export interface WorksheetData {
+  chief_complaint?: string;
+  hpi?: string;
+  past_history?: string;
+  physical_exam?: string;
+  differentials?: string;
+  diagnosis?: string;
+  diagnostic_reasoning?: string;
+  investigations?: string;
+  management?: string;
+  _updated_at?: string;
+}
+
+export interface WorksheetResponse {
+  session_id: string;
+  method: string;
+  case_id: string;
+  fields: string[];
+  worksheet: WorksheetData;
 }
 
 export interface LearningCurvePoint {
@@ -85,7 +107,12 @@ export interface ChecklistHeatmapItem {
   total_sessions: number;
 }
 
-export type MethodId = "multi_agent" | "control" | "exam" | "post_test";
+export type MethodId =
+  | "multi_agent"
+  | "single_agent"
+  | "control"
+  | "exam"
+  | "post_test";
 
 export interface MethodInfo {
   id: MethodId;
@@ -217,6 +244,13 @@ export const api = {
     messages: (sessionId: string) => request<any[]>(`/sessions/${sessionId}/messages`),
     finalEvaluation: (sessionId: string) =>
       request<FinalEvaluation>(`/sessions/${sessionId}/final-evaluation`),
+    getWorksheet: (sessionId: string) =>
+      request<WorksheetResponse>(`/sessions/${sessionId}/worksheet`),
+    saveWorksheet: (sessionId: string, worksheet: WorksheetData) =>
+      request<{ session_id: string; worksheet: WorksheetData }>(
+        `/sessions/${sessionId}/worksheet`,
+        { method: "PUT", body: JSON.stringify({ worksheet }) }
+      ),
   },
 
   control: {

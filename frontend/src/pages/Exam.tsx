@@ -12,6 +12,7 @@ import { useWebSocket, WSMessage } from "../hooks/useWebSocket";
 import { api, FinalEvaluation, UserResponse } from "../services/api";
 import ChatPanel, { ChatMessage } from "../components/ChatPanel";
 import Timer from "../components/Timer";
+import WorksheetPanel from "../components/WorksheetPanel";
 
 interface Props {
   user: UserResponse;
@@ -38,7 +39,9 @@ export default function Exam(_: Props) {
   const [finalEval, setFinalEval] = useState<FinalEvaluation | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [waitingFinal, setWaitingFinal] = useState(false);
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const wsEventsProcessed = useRef(0);
+  const isReconnectingRef = useRef(false);
 
   useEffect(() => {
     if (caseId) {
@@ -52,10 +55,17 @@ export default function Exam(_: Props) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (ws.connected && caseId && !sessionActive && !sessionEnded) {
+    if (!ws.connected || !caseId) return;
+    if (sessionEnded) return;
+    if (isReconnectingRef.current && sessionId) {
+      ws.resumeSession(sessionId);
+      isReconnectingRef.current = false;
+      return;
+    }
+    if (!sessionActive) {
       ws.startSession(caseId, { method: "exam" });
     }
-  }, [ws.connected, caseId, sessionActive, sessionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ws.connected, caseId, sessionActive, sessionEnded, sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const msgs = ws.messages;
@@ -73,6 +83,16 @@ export default function Exam(_: Props) {
         case "session_started":
           setSessionActive(true);
           if (msg.session_id) setSessionId(msg.session_id);
+          break;
+        case "session_resumed":
+          setSessionActive(true);
+          setErrorBanner("已重新连接到原会话，可继续问诊。");
+          break;
+        case "session_expired":
+          setSessionActive(false);
+          setSessionId(null);
+          setChatMessages([]);
+          setErrorBanner("原考试会话已失效，已为你开启新的考试。");
           break;
         case "typing":
           setIsTyping(true);
@@ -106,6 +126,7 @@ export default function Exam(_: Props) {
           break;
         case "error":
           setIsTyping(false);
+          setErrorBanner(msg.content || "本轮处理失败，请稍后重试。");
           break;
         default:
           break;
@@ -115,12 +136,17 @@ export default function Exam(_: Props) {
 
   const handleSend = useCallback(
     (content: string) => {
+      setErrorBanner(null);
       setIsTyping(true);
       setChatMessages((prev) => [
         ...prev,
         { role: "student", content, timestamp: Date.now() },
       ]);
-      ws.sendMessage(content);
+      const ok = ws.sendMessage(content);
+      if (!ok) {
+        setIsTyping(false);
+        setErrorBanner("连接已断开，无法发送。请点击「重新连接」后再试。");
+      }
     },
     [ws]
   );
@@ -130,6 +156,17 @@ export default function Exam(_: Props) {
       ws.endSession();
     }
   };
+
+  const handleReconnect = useCallback(() => {
+    setErrorBanner(null);
+    setIsTyping(false);
+    isReconnectingRef.current = !!sessionId;
+    ws.disconnect();
+    setTimeout(() => ws.connect(), 150);
+  }, [ws, sessionId]);
+
+  const wsBroken =
+    sessionActive && !sessionEnded && (ws.status === "error" || ws.status === "closed");
 
   const patientName = caseInfo?.patient_profile?.name || "患者";
 
@@ -358,14 +395,45 @@ export default function Exam(_: Props) {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
-        <ChatPanel
-          messages={chatMessages}
-          onSend={handleSend}
-          disabled={!sessionActive}
-          patientName={patientName}
-          isTyping={isTyping}
-        />
+      {(wsBroken || errorBanner) && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between">
+          <div className="text-sm text-amber-800 flex items-center gap-2">
+            <span>&#9888;</span>
+            <span>{wsBroken ? "与服务器的连接已断开。" : errorBanner}</span>
+          </div>
+          {wsBroken ? (
+            <button
+              onClick={handleReconnect}
+              className="text-sm px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700"
+            >
+              重新连接
+            </button>
+          ) : (
+            errorBanner && (
+              <button
+                onClick={() => setErrorBanner(null)}
+                className="text-xs text-amber-700 hover:underline"
+              >
+                忽略
+              </button>
+            )
+          )}
+        </div>
+      )}
+
+      <div className="flex flex-1 min-h-0">
+        <div className="flex-1 min-w-0 flex flex-col">
+          <ChatPanel
+            messages={chatMessages}
+            onSend={handleSend}
+            disabled={!sessionActive || wsBroken}
+            patientName={patientName}
+            isTyping={isTyping}
+          />
+        </div>
+        <div className="w-96 border-l border-slate-200 bg-white overflow-hidden flex flex-col">
+          <WorksheetPanel sessionId={sessionId} readOnly={!sessionActive} />
+        </div>
       </div>
     </div>
   );

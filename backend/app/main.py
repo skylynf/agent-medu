@@ -44,6 +44,7 @@ from app.prompts import PromptRegistry
 from app.sessions import (
     SessionStrategy,
     MultiAgentSession,
+    SingleAgentSession,
     ExamSession,
 )
 
@@ -69,6 +70,8 @@ def _build_strategy(method: str, *, session_id, case_id, user_id) -> SessionStra
     method = (method or "multi_agent").lower()
     if method == "exam":
         return ExamSession(session_id=session_id, case_id=case_id, user_id=user_id)
+    if method == "single_agent":
+        return SingleAgentSession(session_id=session_id, case_id=case_id, user_id=user_id)
     return MultiAgentSession(session_id=session_id, case_id=case_id, user_id=user_id)
 
 
@@ -88,6 +91,11 @@ LIGHTWEIGHT_MIGRATIONS: list[tuple[str, str]] = [
         "training_sessions.prompt_versions_json",
         "ALTER TABLE training_sessions "
         "ADD COLUMN IF NOT EXISTS prompt_versions_json JSONB",
+    ),
+    (
+        "training_sessions.worksheet_json",
+        "ALTER TABLE training_sessions "
+        "ADD COLUMN IF NOT EXISTS worksheet_json JSONB",
     ),
 ]
 
@@ -231,6 +239,26 @@ async def _authenticate_ws(token: str) -> User | None:
         return None
 
 
+WS_HEARTBEAT_INTERVAL_SECONDS = 20.0
+
+
+async def _ws_heartbeat(websocket: WebSocket) -> None:
+    """周期性向客户端发应用层 ping，维持反向代理（Railway / Nginx）的 idle 计时器。
+
+    与 starlette 自带的 TCP 级 ping 不同，这里走 JSON message，前端只需要忽略
+    或回 pong 即可。任何发送失败说明连接已坏，循环自然退出。
+    """
+    try:
+        while True:
+            await asyncio.sleep(WS_HEARTBEAT_INTERVAL_SECONDS)
+            try:
+                await websocket.send_json({"type": "ping", "ts": asyncio.get_event_loop().time()})
+            except Exception:
+                return
+    except asyncio.CancelledError:
+        return
+
+
 @app.websocket("/ws/consultation")
 async def websocket_consultation(websocket: WebSocket):
     await websocket.accept()
@@ -254,88 +282,172 @@ async def websocket_consultation(websocket: WebSocket):
         return
 
     orchestrator: SessionStrategy | None = None
+    heartbeat_task = asyncio.create_task(_ws_heartbeat(websocket))
 
     try:
         while True:
-            data = await websocket.receive_json()
-            msg_type = data.get("type")
-
-            if msg_type == "start_session":
-                case_id = data.get("case_id", "")
-                method = (data.get("method") or "multi_agent").lower()
-                if method == "control":
-                    await websocket.send_json({
-                        "type": "error",
-                        "content": "对照学习模式不通过 WebSocket 启动，请改用 /api/sessions/control/start REST 接口",
-                    })
-                    continue
-
-                async with async_session() as db:
-                    session = TrainingSession(
-                        user_id=user.id,
-                        case_id=case_id,
-                        method=method,
-                    )
-                    db.add(session)
-                    await db.commit()
-                    await db.refresh(session)
-                    session_id = session.id
-
-                orchestrator = _build_strategy(
-                    method,
-                    session_id=session_id,
-                    case_id=case_id,
-                    user_id=user.id,
-                )
-                active_sessions[session_id] = orchestrator
-
-                opening = await orchestrator.get_opening()
-                await websocket.send_json({
-                    "type": "session_started",
-                    "session_id": str(session_id),
-                    "case_id": case_id,
-                    "method": method,
-                })
-                await websocket.send_json(opening)
-
-            elif msg_type == "student_message":
-                if not orchestrator:
-                    await websocket.send_json({"type": "error", "content": "请先开始一个会话"})
-                    continue
-
-                content = data.get("content", "").strip()
-                if not content:
-                    continue
-
-                async def stream_send(msg: dict):
-                    await websocket.send_json(msg)
-
-                async with async_session() as db:
-                    await orchestrator.process_student_message(
-                        content, db, send_fn=stream_send,
-                    )
-                    await db.commit()
-
-            elif msg_type == "end_session":
-                if orchestrator:
-                    async with async_session() as db:
-                        summary = await orchestrator.end_session(db)
-                        await db.commit()
-                    await websocket.send_json(summary)
-                    active_sessions.pop(orchestrator.session_id, None)
-                    orchestrator = None
-
-    except WebSocketDisconnect:
-        if orchestrator:
-            async with async_session() as db:
+            try:
+                data = await websocket.receive_json()
+            except WebSocketDisconnect:
+                raise
+            except Exception as recv_exc:
+                # 收到非法 JSON 之类的错误：尽量告诉客户端，但不要断开
+                logger.warning("WS receive parse error: %s", recv_exc)
                 try:
-                    await orchestrator.end_session(db)
-                    await db.commit()
+                    await websocket.send_json({"type": "error", "content": "消息格式错误，已忽略"})
                 except Exception:
                     pass
-            active_sessions.pop(orchestrator.session_id, None)
+                continue
+
+            msg_type = data.get("type")
+
+            # 客户端心跳响应，不做任何业务处理
+            if msg_type in ("pong", "ping"):
+                if msg_type == "ping":
+                    try:
+                        await websocket.send_json({"type": "pong"})
+                    except Exception:
+                        pass
+                continue
+
+            try:
+                if msg_type == "start_session":
+                    case_id = data.get("case_id", "")
+                    method = (data.get("method") or "multi_agent").lower()
+                    if method == "control":
+                        await websocket.send_json({
+                            "type": "error",
+                            "content": "对照学习模式不通过 WebSocket 启动，请改用 /api/sessions/control/start REST 接口",
+                        })
+                        continue
+
+                    async with async_session() as db:
+                        session = TrainingSession(
+                            user_id=user.id,
+                            case_id=case_id,
+                            method=method,
+                        )
+                        db.add(session)
+                        await db.commit()
+                        await db.refresh(session)
+                        session_id = session.id
+
+                    orchestrator = _build_strategy(
+                        method,
+                        session_id=session_id,
+                        case_id=case_id,
+                        user_id=user.id,
+                    )
+                    active_sessions[session_id] = orchestrator
+
+                    opening = await orchestrator.get_opening()
+                    await websocket.send_json({
+                        "type": "session_started",
+                        "session_id": str(session_id),
+                        "case_id": case_id,
+                        "method": method,
+                    })
+                    await websocket.send_json(opening)
+
+                elif msg_type == "student_message":
+                    if not orchestrator:
+                        await websocket.send_json({"type": "error", "content": "请先开始一个会话"})
+                        continue
+
+                    content = data.get("content", "").strip()
+                    if not content:
+                        continue
+
+                    async def stream_send(msg: dict):
+                        await websocket.send_json(msg)
+
+                    async with async_session() as db:
+                        await orchestrator.process_student_message(
+                            content, db, send_fn=stream_send,
+                        )
+                        await db.commit()
+
+                elif msg_type == "resume_session":
+                    # 客户端断线重连：尝试附着回 in-memory 中尚未结束的 orchestrator。
+                    raw_sid = data.get("session_id") or ""
+                    try:
+                        sid = uuid.UUID(raw_sid)
+                    except (ValueError, AttributeError, TypeError):
+                        await websocket.send_json({
+                            "type": "session_expired",
+                            "content": "无效的 session_id",
+                        })
+                        continue
+
+                    candidate = active_sessions.get(sid)
+                    if candidate is None or candidate.user_id != user.id:
+                        await websocket.send_json({
+                            "type": "session_expired",
+                            "session_id": str(sid),
+                            "content": "原会话状态已不在内存中，请开始新的会话",
+                        })
+                        continue
+
+                    orchestrator = candidate
+                    await websocket.send_json({
+                        "type": "session_resumed",
+                        "session_id": str(sid),
+                        "case_id": orchestrator.case_id,
+                        "method": orchestrator.METHOD,
+                        "messages_so_far": len(orchestrator.conversation_history),
+                    })
+
+                elif msg_type == "end_session":
+                    if orchestrator:
+                        async with async_session() as db:
+                            summary = await orchestrator.end_session(db)
+                            await db.commit()
+                        await websocket.send_json(summary)
+                        active_sessions.pop(orchestrator.session_id, None)
+                        orchestrator = None
+                else:
+                    await websocket.send_json({
+                        "type": "error",
+                        "content": f"未知消息类型: {msg_type}",
+                    })
+            except WebSocketDisconnect:
+                raise
+            except Exception as exc:
+                # 单条消息处理失败（多半是 LLM 报错或解析异常）。不要断开整条
+                # 连接，告诉前端「这一轮失败」，让用户可以重新提问 / 结束。
+                logger.exception(
+                    "WS message handler error (type=%s, session=%s): %s",
+                    msg_type,
+                    orchestrator.session_id if orchestrator else None,
+                    exc,
+                )
+                try:
+                    await websocket.send_json({
+                        "type": "error",
+                        "content": f"本轮处理失败：{exc}。请稍后重试或结束本次会话。",
+                        "recoverable": True,
+                    })
+                except Exception:
+                    pass
+                # 继续保持连接
+
+    except WebSocketDisconnect:
+        # 主动断开：不再触发 LLM 总评（避免在用户看不到的情况下白烧 token /
+        # 把考试/MA 会话过早 close 掉）。前端如果想结束，应当显式发 end_session。
+        logger.info(
+            "WS disconnected (user=%s, session=%s) — leaving session open",
+            user.id,
+            orchestrator.session_id if orchestrator else None,
+        )
     except Exception as e:
+        logger.exception("WS top-level error: %s", e)
         try:
             await websocket.send_json({"type": "error", "content": str(e)})
+        except Exception:
+            pass
+    finally:
+        heartbeat_task.cancel()
+        try:
+            await heartbeat_task
         except Exception:
             pass

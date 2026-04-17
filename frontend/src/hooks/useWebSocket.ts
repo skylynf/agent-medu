@@ -37,32 +37,84 @@ export interface WSMessage {
   diagnosis_correct?: boolean;
   differentials_given?: string[];
   narrative_feedback?: string;
+  // server hints
+  recoverable?: boolean;
+  ts?: number;
 }
 
-export type SessionMethod = "multi_agent" | "exam";
+export type SessionMethod = "multi_agent" | "single_agent" | "exam";
+
+export type ConnectionStatus = "idle" | "connecting" | "open" | "closed" | "error";
+
+const HEARTBEAT_INTERVAL_MS = 25_000;
 
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
+  const heartbeatRef = useRef<number | null>(null);
+  const intentionalCloseRef = useRef(false);
+
   const [connected, setConnected] = useState(false);
+  const [status, setStatus] = useState<ConnectionStatus>("idle");
   const [messages, setMessages] = useState<WSMessage[]>([]);
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
+
+  const stopHeartbeat = () => {
+    if (heartbeatRef.current !== null) {
+      window.clearInterval(heartbeatRef.current);
+      heartbeatRef.current = null;
+    }
+  };
+
+  const startHeartbeat = (ws: WebSocket) => {
+    stopHeartbeat();
+    heartbeatRef.current = window.setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(JSON.stringify({ type: "pong" }));
+        } catch {
+          // ignore — onclose 会接管状态
+        }
+      }
+    }, HEARTBEAT_INTERVAL_MS);
+  };
 
   const connect = useCallback(() => {
     setMessages([]);
     setLastMessage(null);
+    setStatus("connecting");
+    intentionalCloseRef.current = false;
+
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
     const ws = new WebSocket(`${protocol}//${host}/ws/consultation`);
 
     ws.onopen = () => {
+      setStatus("open");
       const token = localStorage.getItem("token");
       if (token) {
         ws.send(JSON.stringify({ token }));
       }
+      startHeartbeat(ws);
     };
 
     ws.onmessage = (event) => {
-      const data: WSMessage = JSON.parse(event.data);
+      let data: WSMessage;
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+      // server-side keepalive: 静默忽略，不污染上层 state
+      if (data.type === "ping" || data.type === "pong") {
+        if (data.type === "ping") {
+          try {
+            ws.send(JSON.stringify({ type: "pong" }));
+          } catch {
+            // ignore
+          }
+        }
+        return;
+      }
       if (data.type === "authenticated") {
         setConnected(true);
       }
@@ -71,28 +123,41 @@ export function useWebSocket() {
     };
 
     ws.onclose = () => {
+      stopHeartbeat();
       setConnected(false);
+      setStatus(intentionalCloseRef.current ? "closed" : "error");
     };
 
     ws.onerror = () => {
+      stopHeartbeat();
       setConnected(false);
+      setStatus("error");
     };
 
     wsRef.current = ws;
   }, []);
 
   const disconnect = useCallback(() => {
+    intentionalCloseRef.current = true;
+    stopHeartbeat();
     if (wsRef.current) {
-      wsRef.current.close();
+      try {
+        wsRef.current.close();
+      } catch {
+        // ignore
+      }
       wsRef.current = null;
     }
     setConnected(false);
+    setStatus("closed");
   }, []);
 
   const send = useCallback((data: Record<string, any>) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(data));
+      return true;
     }
+    return false;
   }, []);
 
   const startSession = useCallback(
@@ -106,10 +171,13 @@ export function useWebSocket() {
     [send]
   );
 
+  const resumeSession = useCallback(
+    (sessionId: string) => send({ type: "resume_session", session_id: sessionId }),
+    [send]
+  );
+
   const sendMessage = useCallback(
-    (content: string) => {
-      send({ type: "student_message", content });
-    },
+    (content: string) => send({ type: "student_message", content }),
     [send]
   );
 
@@ -124,6 +192,8 @@ export function useWebSocket() {
 
   useEffect(() => {
     return () => {
+      intentionalCloseRef.current = true;
+      stopHeartbeat();
       if (wsRef.current) {
         wsRef.current.close();
       }
@@ -132,11 +202,13 @@ export function useWebSocket() {
 
   return {
     connected,
+    status,
     messages,
     lastMessage,
     connect,
     disconnect,
     startSession,
+    resumeSession,
     sendMessage,
     endSession,
     clearMessages,

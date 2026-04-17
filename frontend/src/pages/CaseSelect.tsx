@@ -18,6 +18,7 @@ const difficultyColors: Record<number, string> = {
 
 const METHOD_LABELS: Record<MethodId, string> = {
   multi_agent: "多智能体学习 (MA)",
+  single_agent: "单智能体学习 (SA)",
   control: "对照学习 (CT)",
   exam: "考试方法 (Exam)",
   post_test: "后测问卷",
@@ -25,6 +26,7 @@ const METHOD_LABELS: Record<MethodId, string> = {
 
 const METHOD_BADGE_BG: Record<MethodId, string> = {
   multi_agent: "bg-blue-600",
+  single_agent: "bg-sky-600",
   control: "bg-emerald-600",
   exam: "bg-amber-600",
   post_test: "bg-purple-600",
@@ -34,6 +36,8 @@ function getRouteForCase(method: MethodId, caseId: string): string {
   switch (method) {
     case "multi_agent":
       return `/consultation/${caseId}`;
+    case "single_agent":
+      return `/single/${caseId}`;
     case "control":
       return `/control/${caseId}`;
     case "exam":
@@ -50,7 +54,7 @@ export default function CaseSelect() {
   const [params] = useSearchParams();
   const rawMethod = params.get("method") as MethodId | null;
   const method: MethodId =
-    rawMethod && ["multi_agent", "control", "exam"].includes(rawMethod)
+    rawMethod && ["multi_agent", "single_agent", "control", "exam"].includes(rawMethod)
       ? rawMethod
       : "multi_agent";
 

@@ -52,24 +52,44 @@ class PromptRegistry:
 
     @classmethod
     async def seed_db_from_yaml(cls, db: AsyncSession) -> None:
-        """对每个 YAML 中的 key，若 DB 没有 active 版本则插入。"""
+        """同步 YAML 默认值到 DB:
+
+        - DB 中没有任何 active 行 → 插入 YAML 版本为 active；
+        - DB 中存在 active 行，但 version 与 YAML 中不一致 → 视为代码侧
+          升级了 prompt（例如 v1 → v2），将旧 active 置为 false，并插入
+          YAML 新版本作为新 active；
+        - 版本一致 → 不动（即使内容不同也尊重管理员可能的人工编辑）。
+        """
         if not cls._loaded:
             cls.load_yaml_defaults()
         for key, template in cls._templates.items():
             existing = await db.execute(
                 select(Prompt).where(Prompt.key == key, Prompt.active.is_(True))
             )
-            if existing.scalar_one_or_none() is not None:
-                continue
-            db.add(
-                Prompt(
-                    key=key,
-                    version=cls._versions[key],
-                    template=template,
-                    notes=cls._notes.get(key) or "seeded from YAML",
-                    active=True,
+            current = existing.scalar_one_or_none()
+            yaml_version = cls._versions[key]
+            if current is None:
+                db.add(
+                    Prompt(
+                        key=key,
+                        version=yaml_version,
+                        template=template,
+                        notes=cls._notes.get(key) or "seeded from YAML",
+                        active=True,
+                    )
                 )
-            )
+                continue
+            if current.version != yaml_version:
+                current.active = False
+                db.add(
+                    Prompt(
+                        key=key,
+                        version=yaml_version,
+                        template=template,
+                        notes=cls._notes.get(key) or f"auto-upgraded from {current.version}",
+                        active=True,
+                    )
+                )
         await db.commit()
 
     @classmethod

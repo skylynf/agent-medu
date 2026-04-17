@@ -49,6 +49,38 @@ def _render_holistic_rubric() -> str:
     return "\n\n".join(blocks)
 
 
+_WORKSHEET_LABELS: dict[str, str] = {
+    "chief_complaint": "主诉概括",
+    "hpi": "现病史汇总",
+    "past_history": "既往史 / 个人史 / 家族史",
+    "physical_exam": "体格检查重点",
+    "differentials": "鉴别诊断",
+    "diagnosis": "最可能诊断",
+    "diagnostic_reasoning": "诊断依据 / 推理过程",
+    "investigations": "下一步检查",
+    "management": "处置 / 治疗计划",
+}
+
+
+def _render_worksheet(worksheet: dict | None) -> str:
+    if not worksheet or not isinstance(worksheet, dict):
+        return "（学生未填写任何临床表单内容）"
+    blocks: list[str] = []
+    for key, label in _WORKSHEET_LABELS.items():
+        v = worksheet.get(key)
+        if not v:
+            continue
+        if not isinstance(v, str):
+            v = str(v)
+        v = v.strip()
+        if not v:
+            continue
+        blocks.append(f"### {label}\n{v}")
+    if not blocks:
+        return "（学生未填写任何临床表单内容）"
+    return "\n\n".join(blocks)
+
+
 def _render_transcript(conversation_history: list[dict]) -> str:
     lines: list[str] = []
     for m in conversation_history:
@@ -154,8 +186,12 @@ def _empty_result_with_error(reason: str) -> dict:
 async def evaluate_exam(
     case_data: dict,
     conversation_history: list[dict],
+    worksheet: dict | None = None,
 ) -> tuple[dict, str]:
     """对一次完整的考试问诊做一次性整评。
+
+    `worksheet` 为学生在问诊期间填写的临床表单（鉴别诊断 / 处置等）。它直接进入
+    评估提示词，是判定「临床推理」与「诊断准确性」两个维度的主要依据。
 
     Returns: (normalized_result_dict, raw_llm_text)
     """
@@ -173,6 +209,7 @@ async def evaluate_exam(
         expected_diagnosis=expected_diagnosis,
         key_differentials=key_diff_text,
         transcript=_render_transcript(conversation_history),
+        worksheet=_render_worksheet(worksheet),
     )
 
     user_msg = "请按系统提示词中的输出格式严格输出 JSON，不要任何额外文字。"

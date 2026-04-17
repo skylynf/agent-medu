@@ -2,12 +2,14 @@
 
 from app.sessions.base import SessionStrategy
 from app.sessions.multi_agent import MultiAgentSession
+from app.sessions.single_agent import SingleAgentSession
 from app.sessions.exam import ExamSession
 from app.sessions.control import ControlSession, build_ct_stages
 
 __all__ = [
     "SessionStrategy",
     "MultiAgentSession",
+    "SingleAgentSession",
     "ExamSession",
     "ControlSession",
     "build_ct_stages",
@@ -20,6 +22,8 @@ def create_strategy(method: str, **kwargs) -> SessionStrategy:
     method = (method or "multi_agent").lower()
     if method == "exam":
         return ExamSession(**kwargs)
+    if method == "single_agent":
+        return SingleAgentSession(**kwargs)
     if method == "control":
         # ControlSession 通过 REST 调用，不会走 WS create_strategy 路径，
         # 这里仍然提供以便统一接口。

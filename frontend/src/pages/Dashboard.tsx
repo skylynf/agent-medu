@@ -28,6 +28,22 @@ interface Props {
   user: UserResponse;
 }
 
+const METHOD_META: Record<string, { label: string; cls: string }> = {
+  multi_agent: { label: "MA · 多智能体", cls: "bg-blue-50 text-blue-700" },
+  single_agent: { label: "SA · 单智能体", cls: "bg-sky-50 text-sky-700" },
+  control: { label: "CT · 对照学习", cls: "bg-emerald-50 text-emerald-700" },
+  exam: { label: "Exam · 考试", cls: "bg-amber-50 text-amber-700" },
+};
+
+function methodMeta(method: string | null | undefined) {
+  return (
+    METHOD_META[method || ""] || {
+      label: method || "—",
+      cls: "bg-slate-100 text-slate-600",
+    }
+  );
+}
+
 export default function Dashboard({ user }: Props) {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<SessionResponse[]>([]);
@@ -261,6 +277,9 @@ export default function Dashboard({ user }: Props) {
                   病例
                 </th>
                 <th className="text-left py-3 px-3 text-slate-500 font-medium">
+                  训练方法
+                </th>
+                <th className="text-left py-3 px-3 text-slate-500 font-medium">
                   时间
                 </th>
                 <th className="text-right py-3 px-3 text-slate-500 font-medium">
@@ -278,37 +297,54 @@ export default function Dashboard({ user }: Props) {
               </tr>
             </thead>
             <tbody>
-              {sessions.map((s) => (
-                <tr
-                  key={s.id}
-                  className="border-b border-slate-100 hover:bg-slate-50"
-                >
-                  <td className="py-3 px-3 text-slate-700">{s.case_id}</td>
-                  <td className="py-3 px-3 text-slate-500">
-                    {new Date(s.started_at).toLocaleDateString("zh-CN")}
-                  </td>
-                  <td className="py-3 px-3 text-right font-medium">
-                    {s.final_score !== null ? s.final_score.toFixed(1) : "-"}
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    {s.student_messages}
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    {s.tutor_interventions_count}
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    {s.ended_at ? (
-                      <span className="text-green-600">已完成</span>
-                    ) : (
-                      <span className="text-amber-500">进行中</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {sessions.map((s) => {
+                const showsScore = s.method !== "single_agent" && s.method !== "multi_agent";
+                // SA / MA 不向学生展示分数；考试与对照才展示。
+                // （multi_agent 仍然在结尾屏蔽，为保持与 UI 文案一致这里也置灰）
+                const m = methodMeta(s.method);
+                return (
+                  <tr
+                    key={s.id}
+                    className="border-b border-slate-100 hover:bg-slate-50"
+                  >
+                    <td className="py-3 px-3 text-slate-700">{s.case_id}</td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${m.cls}`}
+                      >
+                        {m.label}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-slate-500">
+                      {new Date(s.started_at).toLocaleDateString("zh-CN")}
+                    </td>
+                    <td className="py-3 px-3 text-right font-medium">
+                      {showsScore && s.final_score !== null
+                        ? s.final_score.toFixed(1)
+                        : <span className="text-slate-300">—</span>}
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      {s.student_messages}
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      {s.method === "multi_agent"
+                        ? s.tutor_interventions_count
+                        : <span className="text-slate-300">—</span>}
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      {s.ended_at ? (
+                        <span className="text-green-600">已完成</span>
+                      ) : (
+                        <span className="text-amber-500">进行中</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {sessions.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="py-8 text-center text-slate-400"
                   >
                     还没有训练记录，快去选择病例开始训练吧

@@ -25,6 +25,9 @@ class TrainingSession(Base):
     post_survey_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     # 本会话使用的 prompt 版本快照，例如 {"sp_agent": "v2", "tutor_agent": "v1", ...}
     prompt_versions_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # 学生在 MA / Exam 模式下边问诊边填写的临床表单（鉴别诊断、最终诊断、处置等）。
+    # 终评时与对话记录一并送入 final_evaluator，作为评判依据。
+    worksheet_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     user = relationship("User", back_populates="sessions")
     messages = relationship(

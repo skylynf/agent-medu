@@ -8,6 +8,7 @@ interface Props {
 
 const METHOD_ROUTES: Record<MethodId, string> = {
   multi_agent: "/cases?method=multi_agent",
+  single_agent: "/cases?method=single_agent",
   control: "/cases?method=control",
   exam: "/cases?method=exam",
   post_test: "/post-test",
@@ -15,6 +16,7 @@ const METHOD_ROUTES: Record<MethodId, string> = {
 
 const METHOD_ACCENTS: Record<MethodId, string> = {
   multi_agent: "from-blue-50 to-blue-100 border-blue-200",
+  single_agent: "from-sky-50 to-sky-100 border-sky-200",
   control: "from-emerald-50 to-emerald-100 border-emerald-200",
   exam: "from-amber-50 to-amber-100 border-amber-200",
   post_test: "from-purple-50 to-purple-100 border-purple-200",
@@ -22,6 +24,7 @@ const METHOD_ACCENTS: Record<MethodId, string> = {
 
 const METHOD_BADGE: Record<MethodId, string> = {
   multi_agent: "bg-blue-600 text-white",
+  single_agent: "bg-sky-600 text-white",
   control: "bg-emerald-600 text-white",
   exam: "bg-amber-600 text-white",
   post_test: "bg-purple-600 text-white",
@@ -49,7 +52,9 @@ export default function Home({ user }: Props) {
           欢迎进入 Medu-SPAgent
         </h2>
         <p className="text-slate-500 mt-2 leading-relaxed">
-          研究面向 medical education 期刊投稿的标准化病人 (SP) 训练平台。请按照研究指引顺序选择对应的学习方法。
+          研究面向 medical education 期刊投稿的标准化病人 (SP) 训练平台。
+          目前包含 <strong>单智能体 (SA)</strong> / <strong>多智能体 (MA)</strong> /
+          <strong> 对照学习 (CT)</strong> / <strong>考试 (Exam)</strong> 四种学习方法与后测问卷。
         </p>
       </div>
 

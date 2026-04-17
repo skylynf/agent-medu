@@ -94,9 +94,14 @@ class ExamSession(SessionStrategy):
     async def end_session(self, db: AsyncSession) -> dict:
         await self._save_prompt_versions(db)
 
+        # 拉取学生在问诊过程中填写的临床表单（可能为空）
+        session_obj = await db.get(TrainingSession, self.session_id)
+        worksheet = (session_obj.worksheet_json if session_obj else None) or None
+
         result, raw = await evaluate_exam(
             case_data=self.case_data,
             conversation_history=self.conversation_history,
+            worksheet=worksheet,
         )
 
         # 把 checklist_results 转成 weighted score 与 placeholder_checklist 同结构
@@ -156,6 +161,7 @@ class ExamSession(SessionStrategy):
             "strengths": result["strengths"],
             "improvements": result["improvements"],
             "narrative_feedback": result["narrative_feedback"],
+            "worksheet": worksheet,
         }
 
     # ------------------------------------------------------------------ utils

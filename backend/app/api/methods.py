@@ -16,6 +16,17 @@ METHODS = [
         "needs_case": True,
     },
     {
+        "id": "single_agent",
+        "name": "单智能体学习 (SA)",
+        "short": "SA",
+        "description": "只与 AI-SP 自由对话，没有导师提示也没有任何评分反馈。用于研究「无脚手架的纯对话练习」与多智能体方法的对照。",
+        "interactive": True,
+        "uses_ws": True,
+        "shows_evaluation": False,
+        "shows_tutor": False,
+        "needs_case": True,
+    },
+    {
         "id": "control",
         "name": "对照学习 (CT)",
         "short": "CT",

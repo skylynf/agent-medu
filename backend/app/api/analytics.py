@@ -287,6 +287,8 @@ async def export_sessions(
         "final_score", "completion_rate",
         "diagnosis_given", "diagnosis_correct",
         "h_history_completeness", "h_communication", "h_clinical_reasoning", "h_diagnostic_accuracy",
+        "worksheet_diagnosis", "worksheet_differentials", "worksheet_reasoning", "worksheet_management",
+        "worksheet_filled",
         "prompt_versions",
     ]
     rows: list[list] = [header]
@@ -297,6 +299,11 @@ async def export_sessions(
         if s.ended_at and s.started_at:
             duration = int((s.ended_at - s.started_at).total_seconds())
         h = (fe.holistic_scores_json or {}) if fe else {}
+        ws = s.worksheet_json or {}
+        # 排除元字段后判断是否真的填了什么
+        ws_filled = any(
+            k for k, v in ws.items() if k != "_updated_at" and v
+        )
         rows.append([
             str(s.id),
             str(s.user_id),
@@ -321,6 +328,11 @@ async def export_sessions(
             h.get("communication", ""),
             h.get("clinical_reasoning", ""),
             h.get("diagnostic_accuracy", ""),
+            ws.get("diagnosis", ""),
+            ws.get("differentials", ""),
+            ws.get("diagnostic_reasoning", ""),
+            ws.get("management", ""),
+            "1" if ws_filled else "0",
             json.dumps(s.prompt_versions_json, ensure_ascii=False) if s.prompt_versions_json else "",
         ])
     return _streamed_csv(rows, "medu_spagent_sessions.csv")
