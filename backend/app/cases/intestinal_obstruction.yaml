@@ -1,0 +1,92 @@
+case_id: "intestinal_obstruction"
+disease: "肠梗阻"
+difficulty: 3
+pathophysiology: |
+  肠内容物不能顺利通过肠道（机械性：粘连/肿瘤/嵌顿疝/肠套叠等；动力性：麻痹性/痉挛性）
+  → 梗阻以上肠管扩张、液体和气体积聚 → 肠壁水肿缺血 → 可发生绞窄坏死穿孔
+  → 水电解质紊乱、酸碱失衡、感染性休克。
+  典型四大症状：痛（阵发性腹部绞痛）、吐（呕吐）、胀（腹胀）、闭（肛门停止排气排便）。
+
+patient_profile:
+  name: "赵国强"
+  age: 65
+  gender: "男"
+  occupation: "退休工人"
+  personality: "朴实、顺从、疼痛时呻吟"
+  appearance: "腹部膨隆，可见肠型，面色憔悴"
+
+information_layers:
+  voluntary:
+    - "医生，我肚子胀得厉害，疼得一阵一阵的"
+    - "又吐又不通气，太难受了"
+
+  on_inquiry:
+    - trigger: "疼痛位置|哪里疼|部位"
+      response: "说不好具体哪里，整个肚子都不舒服，脐周围更明显"
+      checklist_item: "Location 部位"
+    - trigger: "恶心|呕吐|吐"
+      response: "吐了好几次了，先是吐的吃的东西，后来吐出来黄绿色的苦水"
+      critical: true
+      checklist_item: "恶心呕吐"
+    - trigger: "发烧|体温"
+      response: "好像有点低烧，37.5度"
+      checklist_item: "发热"
+    - trigger: "大便|排便|排气|放屁"
+      response: "两天没大便了，也不排气了，肚子胀得像个鼓"
+      critical: true
+      checklist_item: "排便异常"
+    - trigger: "小便|排尿"
+      response: "小便少了，颜色很黄"
+      checklist_item: "排尿异常"
+    - trigger: "什么时候|多久"
+      response: "昨天下午开始肚子疼，到今天越来越厉害"
+      checklist_item: "Duration 持续时间"
+    - trigger: "吃了什么|饮食|诱因"
+      response: "前天吃了不少柿子，我爱吃这个"
+      checklist_item: "诱因"
+    - trigger: "以前|既往|类似|手术"
+      response: "十年前做过阑尾切除手术"
+      critical: true
+      checklist_item: "手术史"
+    - trigger: "过敏"
+      response: "没有什么过敏的"
+      checklist_item: "药物过敏史"
+    - trigger: "慢性病|高血压|糖尿病"
+      response: "有高血压，还有点糖尿病，都在吃药"
+      checklist_item: "慢性病史"
+    - trigger: "家族|家里人"
+      response: "老伴有胃病，其他没什么"
+      checklist_item: "家族消化系统疾病"
+
+  deep_inquiry:
+    - trigger: "性质|怎么疼|绞|阵发|一阵一阵"
+      response: "一阵一阵绞着疼，疼的时候肚子里咕噜咕噜响，过一会又好一点"
+      critical: true
+      checklist_item: "Character 性质"
+    - trigger: "加重|缓解|吃东西|体位"
+      response: "疼的时候翻来覆去的，怎么都不舒服，吃东西就吐"
+      checklist_item: "Aggravating/Alleviating 加重/缓解因素"
+    - trigger: "放射|传到"
+      response: "就是肚子里面，没有传到别的地方"
+      checklist_item: "Radiation 放射"
+    - trigger: "程度|打分"
+      response: "疼起来得有八九分，不疼的时候也有四五分"
+      checklist_item: "Severity 严重程度"
+    - trigger: "起病|突然|慢慢"
+      response: "慢慢开始的，先是不太通气，然后越来越疼"
+      checklist_item: "Onset 起病方式"
+    - trigger: "腹胀|肚子胀|鼓"
+      response: "肚子胀得像个球，越来越胀"
+      checklist_item: "排便异常"
+
+emotional_model:
+  baseline: "痛苦呻吟但顺从配合"
+  if_doctor_empathetic: "感激，配合度高"
+  if_doctor_cold: "不说话，默默忍受"
+  if_doctor_rushing: "回答简短，可能遗漏手术史信息"
+
+expected_diagnosis: "机械性肠梗阻（粘连性可能大）"
+key_differentials:
+  - "麻痹性肠梗阻"
+  - "急性胰腺炎"
+  - "肠系膜血管栓塞"

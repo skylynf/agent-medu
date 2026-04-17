@@ -1,0 +1,100 @@
+case_id: "peptic_ulcer_perforation"
+disease: "消化性溃疡穿孔"
+difficulty: 3
+pathophysiology: |
+  长期胃酸和胃蛋白酶对胃/十二指肠黏膜的消化作用 → 溃疡形成 → 溃疡侵蚀至浆膜层
+  → 穿孔 → 消化液进入腹腔 → 化学性腹膜炎 → 继发细菌性腹膜炎。
+  典型表现为突发"刀割样"剧烈上腹痛，迅速扩展至全腹，板状腹，气腹征。
+
+patient_profile:
+  name: "王建国"
+  age: 52
+  gender: "男"
+  occupation: "出租车司机"
+  personality: "忍耐力强，习惯硬扛"
+  appearance: "面色灰白、冷汗、平卧不敢动"
+
+information_layers:
+  voluntary:
+    - "医生，我上腹突然疼得不得了，像刀捅了一样"
+    - "动都不敢动"
+
+  on_inquiry:
+    - trigger: "疼痛位置|哪里疼|部位"
+      response: "最开始是上面这里，现在感觉整个肚子都疼了"
+      critical: true
+      checklist_item: "Location 部位"
+    - trigger: "恶心|呕吐"
+      response: "有恶心，但没吐出来"
+      checklist_item: "恶心呕吐"
+    - trigger: "发烧|体温"
+      response: "刚才好像有点发冷，体温还没量"
+      checklist_item: "发热"
+    - trigger: "大便|排便"
+      response: "今天还没排便"
+      checklist_item: "排便异常"
+    - trigger: "小便|排尿"
+      response: "正常"
+      checklist_item: "排尿异常"
+    - trigger: "什么时候|多久"
+      response: "就一个小时前，吃完午饭没多久突然就疼了"
+      checklist_item: "Duration 持续时间"
+    - trigger: "吃了什么|饮食|诱因"
+      response: "中午赶时间就随便扒了几口饭，还喝了杯凉水"
+      checklist_item: "诱因"
+    - trigger: "以前|既往|胃病|胃疼"
+      response: "有老胃病了，十几年了，经常上腹疼，吃点药就好了"
+      critical: true
+      checklist_item: "既往类似发作"
+    - trigger: "手术"
+      response: "没做过手术"
+      checklist_item: "手术史"
+    - trigger: "过敏"
+      response: "不知道，应该没有"
+      checklist_item: "药物过敏史"
+    - trigger: "慢性病|高血压|糖尿病"
+      response: "有高血压，吃着降压药"
+      checklist_item: "慢性病史"
+    - trigger: "家族|家里人"
+      response: "没什么特别的"
+      checklist_item: "家族消化系统疾病"
+    - trigger: "吸烟|抽烟|喝酒|烟酒"
+      response: "抽烟二十多年了，一天一包，偶尔喝点酒"
+      checklist_item: "诱因"
+
+  deep_inquiry:
+    - trigger: "性质|怎么疼|刀割|撕裂"
+      response: "就像有把刀在肚子里捅一样，从来没这么疼过"
+      checklist_item: "Character 性质"
+    - trigger: "起病|突然|慢慢|怎么发生"
+      response: "非常突然，一瞬间就疼起来了，剧烈的那种"
+      critical: true
+      checklist_item: "Onset 起病方式"
+    - trigger: "加重|缓解|动|呼吸|翻身"
+      response: "一动就疼得更厉害，呼吸深了也疼，就这么躺着不敢动"
+      critical: true
+      checklist_item: "Aggravating/Alleviating 加重/缓解因素"
+    - trigger: "放射|别的地方|肩膀"
+      response: "好像右边肩膀也有点不舒服，说不上来"
+      checklist_item: "Radiation 放射"
+    - trigger: "程度|打分"
+      response: "10分，最疼的那种"
+      checklist_item: "Severity 严重程度"
+    - trigger: "规律|持续|阵发"
+      response: "一直疼，没停过"
+      checklist_item: "Timing/Temporal 时间规律"
+    - trigger: "药|吃过什么药|止痛"
+      response: "平时胃疼吃奥美拉唑，但今天来不及吃"
+      checklist_item: "既往类似发作"
+
+emotional_model:
+  baseline: "极度痛苦但克制，不愿大声叫"
+  if_doctor_empathetic: "感激，会努力配合回答"
+  if_doctor_cold: "沉默寡言，只简短回答"
+  if_doctor_rushing: "紧张，但仍忍痛配合"
+
+expected_diagnosis: "消化性溃疡（十二指肠球部溃疡）穿孔"
+key_differentials:
+  - "急性胰腺炎"
+  - "急性胆囊炎穿孔"
+  - "急性心肌梗死"

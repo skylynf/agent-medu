@@ -1,0 +1,18 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+alembic==1.14.1
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+# passlib 1.7.4 初始化 bcrypt 时会用 >72 字节的探测串；bcrypt>=4.1 会抛 ValueError
+bcrypt>=4.0.1,<4.1.0
+python-multipart==0.0.20
+pyyaml==6.0.2
+httpx==0.28.1
+openai==1.59.3
+dashscope
+websockets==14.1

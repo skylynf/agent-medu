@@ -1,0 +1,74 @@
+history_taking_checklist:
+  chief_complaint:
+    display_name: "主诉"
+    items:
+      - item: "诱因"
+        weight: 1
+      - item: "主要症状"
+        weight: 2
+      - item: "持续时间"
+        weight: 1
+
+  present_illness:
+    display_name: "现病史 (OLDCARTS)"
+    items:
+      - item: "Onset 起病方式"
+        weight: 2
+      - item: "Location 部位"
+        weight: 2
+        critical: true
+      - item: "Duration 持续时间"
+        weight: 1
+      - item: "Character 性质"
+        weight: 2
+      - item: "Aggravating/Alleviating 加重/缓解因素"
+        weight: 2
+        critical: true
+      - item: "Radiation 放射"
+        weight: 1
+      - item: "Timing/Temporal 时间规律"
+        weight: 1
+      - item: "Severity 严重程度"
+        weight: 1
+
+  associated_symptoms:
+    display_name: "伴随症状"
+    items:
+      - item: "恶心呕吐"
+        weight: 1
+      - item: "发热"
+        weight: 2
+      - item: "排便异常"
+        weight: 1
+      - item: "排尿异常"
+        weight: 1
+
+  past_medical_history:
+    display_name: "既往史"
+    items:
+      - item: "既往类似发作"
+        weight: 1
+      - item: "手术史"
+        weight: 2
+      - item: "药物过敏史"
+        weight: 1
+      - item: "慢性病史"
+        weight: 1
+
+  family_history:
+    display_name: "家族史"
+    items:
+      - item: "家族消化系统疾病"
+        weight: 1
+
+  communication_skills:
+    display_name: "沟通技巧"
+    items:
+      - item: "自我介绍"
+        weight: 1
+      - item: "开放式提问使用"
+        weight: 2
+      - item: "共情表达"
+        weight: 2
+      - item: "总结确认"
+        weight: 1
