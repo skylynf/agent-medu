@@ -181,9 +181,7 @@ export function useWebSocket() {
     [send]
   );
 
-  const endSession = useCallback(() => {
-    send({ type: "end_session" });
-  }, [send]);
+  const endSession = useCallback(() => send({ type: "end_session" }), [send]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

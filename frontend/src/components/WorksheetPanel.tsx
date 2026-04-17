@@ -4,65 +4,17 @@ import { api, WorksheetData } from "../services/api";
 interface FieldDef {
   key: keyof WorksheetData;
   label: string;
-  placeholder: string;
   rows?: number;
 }
 
+// 精简至 4 个核心字段：鉴别诊断、最可能诊断、诊断依据、处置计划。
+// 主诉 / 现病史 / 既往史 / 体格检查 / 辅助检查 等内容可由 final_evaluator
+// 直接从对话记录中提取，不再要求学生重复填写。
 const FIELDS: FieldDef[] = [
-  {
-    key: "chief_complaint",
-    label: "主诉概括",
-    placeholder: "例：上腹痛 6 小时，呕吐 2 次。",
-    rows: 2,
-  },
-  {
-    key: "hpi",
-    label: "现病史汇总",
-    placeholder: "起病诱因、性质、放射、伴随症状、加重 / 缓解因素、既往类似发作等。",
-    rows: 4,
-  },
-  {
-    key: "past_history",
-    label: "既往史 / 个人史 / 家族史",
-    placeholder: "高血压、糖尿病、手术史、药物 / 食物过敏、烟酒、家族史等。",
-    rows: 3,
-  },
-  {
-    key: "physical_exam",
-    label: "体格检查重点（如已采集）",
-    placeholder: "生命体征、腹部查体、压痛 / 反跳痛、Murphy 征等。",
-    rows: 2,
-  },
-  {
-    key: "differentials",
-    label: "鉴别诊断（每行一个）",
-    placeholder: "急性胆囊炎\n急性胰腺炎\n胃十二指肠穿孔\n...",
-    rows: 4,
-  },
-  {
-    key: "diagnosis",
-    label: "最可能诊断",
-    placeholder: "你的初步判断。",
-    rows: 2,
-  },
-  {
-    key: "diagnostic_reasoning",
-    label: "诊断依据 / 推理过程",
-    placeholder: "结合你采集到的关键信息说明为什么倾向于该诊断、为什么排除其他鉴别。",
-    rows: 4,
-  },
-  {
-    key: "investigations",
-    label: "下一步检查",
-    placeholder: "实验室、影像、特殊检查及其依据。",
-    rows: 3,
-  },
-  {
-    key: "management",
-    label: "处置 / 治疗计划",
-    placeholder: "急诊处置、专科会诊、手术 / 保守治疗、患者教育等。",
-    rows: 3,
-  },
+  { key: "differentials", label: "鉴别诊断（每行一个）", rows: 4 },
+  { key: "diagnosis", label: "最可能诊断", rows: 2 },
+  { key: "diagnostic_reasoning", label: "诊断依据", rows: 4 },
+  { key: "management", label: "处置 / 治疗计划", rows: 3 },
 ];
 
 interface Props {
@@ -156,9 +108,6 @@ export default function WorksheetPanel({ sessionId, readOnly = false }: Props) {
             {filledCount}/{FIELDS.length} 已填写
           </span>
         </div>
-        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-          边问诊边记录你的鉴别诊断与推理过程。本表单将与对话记录一并提交终评。
-        </p>
         <div className="mt-2 text-[11px] h-4">
           {!sessionId && (
             <span className="text-slate-300">等待会话开始...</span>
@@ -184,7 +133,6 @@ export default function WorksheetPanel({ sessionId, readOnly = false }: Props) {
             <textarea
               className="w-full text-sm border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-medical/40 disabled:bg-slate-50 disabled:text-slate-500 resize-y"
               rows={f.rows ?? 3}
-              placeholder={f.placeholder}
               value={(data[f.key] as string) || ""}
               onChange={(e) => handleChange(f.key, e.target.value)}
               disabled={!sessionId || readOnly}

@@ -1,0 +1,143 @@
+instrument: ues
+display_name: "用户参与度量表 (UES) 长版"
+description: |
+  O’Brien et al. (2018) Refined User Engagement Scale 长版。1=非常不同意，5=非常同意。
+  施测时题目应随机呈现，且勿向被试展示维度标签（本 YAML 中 subscale 仅供系统计分）。
+  反向计分项：PU.1–PU.6、PU.8、RW.3（见各题 reverse 字段）。
+  分量表均分：FA/7、PU/8、AE/5、RW/10；总体参与分 = 四个分量表均分之和。
+  O’Brien, H. L., et al. International Journal of Human-Computer Studies, 112 (2018), 28–39.
+scale:
+  type: likert
+  min: 1
+  max: 5
+  labels:
+    "1": "非常不同意"
+    "2": "不同意"
+    "3": "既不同意也不反对"
+    "4": "同意"
+    "5": "非常同意"
+items:
+  # Focused Attention (FA)
+  - id: ues_fa1
+    subscale: fa
+    text: "我完全沉浸在这段体验中。"
+    reverse: false
+  - id: ues_fa2
+    subscale: fa
+    text: "我如此投入于这段体验，以至于忘记了时间。"
+    reverse: false
+  - id: ues_fa3
+    subscale: fa
+    text: "使用本系统时，我将周围的事物摒除在外。"
+    reverse: false
+  - id: ues_fa4
+    subscale: fa
+    text: "使用本系统时，我忘记了周遭世界。"
+    reverse: false
+  - id: ues_fa5
+    subscale: fa
+    text: "使用本系统的时间不知不觉就过去了。"
+    reverse: false
+  - id: ues_fa6
+    subscale: fa
+    text: "我全神贯注于这段体验。"
+    reverse: false
+  - id: ues_fa7
+    subscale: fa
+    text: "在这段体验中我全然投入、放松自我。"
+    reverse: false
+  # Perceived Usability (PU)
+  - id: ues_pu1
+    subscale: pu
+    text: "使用本系统时我感到沮丧。"
+    reverse: true
+  - id: ues_pu2
+    subscale: pu
+    text: "我觉得本系统令人困惑。"
+    reverse: true
+  - id: ues_pu3
+    subscale: pu
+    text: "使用本系统时我感到烦躁。"
+    reverse: true
+  - id: ues_pu4
+    subscale: pu
+    text: "使用本系统时我感到气馁。"
+    reverse: true
+  - id: ues_pu5
+    subscale: pu
+    text: "使用本系统让我感到费力。"
+    reverse: true
+  - id: ues_pu6
+    subscale: pu
+    text: "这段体验在认知或精力上要求很高。"
+    reverse: true
+  - id: ues_pu7
+    subscale: pu
+    text: "使用本系统时我感到自己掌控得当。"
+    reverse: false
+  - id: ues_pu8
+    subscale: pu
+    text: "使用本系统时，我无法完成一些我需要完成的事。"
+    reverse: true
+  # Aesthetic Elements (AE)
+  - id: ues_ae1
+    subscale: ae
+    text: "本系统在观感上具有吸引力。"
+    reverse: false
+  - id: ues_ae2
+    subscale: ae
+    text: "本系统在美学上令人愉悦。"
+    reverse: false
+  - id: ues_ae3
+    subscale: ae
+    text: "我喜欢本系统呈现的图形与图像。"
+    reverse: false
+  - id: ues_ae4
+    subscale: ae
+    text: "本系统在视觉上吸引我。"
+    reverse: false
+  - id: ues_ae5
+    subscale: ae
+    text: "本系统的屏幕布局在视觉上令人舒适。"
+    reverse: false
+  # Reward Factor (RW)
+  - id: ues_rw1
+    subscale: rw
+    text: "使用本系统是值得的。"
+    reverse: false
+  - id: ues_rw2
+    subscale: rw
+    text: "我认为自己的这次体验是成功的。"
+    reverse: false
+  - id: ues_rw3
+    subscale: rw
+    text: "这段体验并未按我原先设想的方式发展。"
+    reverse: true
+  - id: ues_rw4
+    subscale: rw
+    text: "我的体验是有收获的。"
+    reverse: false
+  - id: ues_rw5
+    subscale: rw
+    text: "我会向家人或朋友推荐本系统。"
+    reverse: false
+  - id: ues_rw6
+    subscale: rw
+    text: "出于好奇我继续使用本系统。"
+    reverse: false
+  - id: ues_rw7
+    subscale: rw
+    text: "本系统的内容激起了我的好奇心。"
+    reverse: false
+  - id: ues_rw8
+    subscale: rw
+    text: "我被这段体验深深吸引。"
+    reverse: false
+  - id: ues_rw9
+    subscale: rw
+    text: "我感到自己切实参与到了这段体验中。"
+    reverse: false
+  - id: ues_rw10
+    subscale: rw
+    text: "这段体验很有趣。"
+    reverse: false

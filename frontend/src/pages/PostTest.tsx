@@ -31,6 +31,10 @@ export default function PostTest() {
     () => instruments.find((i) => i.instrument === "sus"),
     [instruments]
   );
+  const uesInstrument = useMemo(
+    () => instruments.find((i) => i.instrument === "ues"),
+    [instruments]
+  );
   const openInstrument = useMemo(
     () => instruments.find((i) => i.instrument === "open_ended"),
     [instruments]
@@ -80,7 +84,7 @@ export default function PostTest() {
       <div>
         <h2 className="text-2xl font-bold text-slate-800">后测问卷</h2>
         <p className="text-slate-500 mt-1">
-          请在完成全部学习与考试任务后填写下列问卷。两份问卷可独立提交。
+          请在完成全部学习与考试任务后填写下列问卷。各问卷可独立提交。
           {sessionId && (
             <span className="ml-1 text-xs text-slate-400">
               （已关联 session: {sessionId.slice(0, 8)}…）
@@ -103,6 +107,25 @@ export default function PostTest() {
               scale={susInstrument.scale}
               value={(responses["sus"] || {})[item.id]}
               onChange={(v) => setAnswer("sus", item.id, v)}
+            />
+          )}
+        />
+      )}
+
+      {uesInstrument && (
+        <SurveyCard
+          instrument={uesInstrument}
+          values={responses["ues"] || {}}
+          onChange={(qid, val) => setAnswer("ues", qid, val)}
+          onSubmit={() => submit("ues")}
+          state={state["ues"]}
+          render={(item) => (
+            <LikertRow
+              key={item.id}
+              item={item}
+              scale={uesInstrument.scale}
+              value={(responses["ues"] || {})[item.id]}
+              onChange={(v) => setAnswer("ues", item.id, v)}
             />
           )}
         />
@@ -174,6 +197,14 @@ function SurveyCard({ instrument, onSubmit, state, render }: SurveyCardProps) {
               提交成功
               {state.scoring?.sus_score !== undefined && state.scoring?.sus_score !== null && (
                 <> · SUS 总分 {Number(state.scoring.sus_score).toFixed(1)}</>
+              )}
+              {state.scoring?.ues_overall !== undefined && state.scoring?.ues_overall !== null && (
+                <>
+                  {" "}
+                  · UES 总体 {Number(state.scoring.ues_overall).toFixed(2)}（FA{" "}
+                  {Number(state.scoring.fa_mean).toFixed(2)} / PU {Number(state.scoring.pu_mean).toFixed(2)} / AE{" "}
+                  {Number(state.scoring.ae_mean).toFixed(2)} / RW {Number(state.scoring.rw_mean).toFixed(2)}）
+                </>
               )}
             </span>
           )}

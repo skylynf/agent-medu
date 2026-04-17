@@ -32,6 +32,7 @@ export default function Consultation({ user }: Props) {
   const [summary, setSummary] = useState<WSMessage | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [isEnding, setIsEnding] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<"eval" | "worksheet">("eval");
   const isReconnectingRef = useRef(false);
   /** 已处理的 WS 事件条数（messages 保留全量，避免 lastMessage 被批量更新覆盖丢失） */
@@ -149,6 +150,7 @@ export default function Consultation({ user }: Props) {
 
         case "session_summary":
           setIsTyping(false);
+          setIsEnding(false);
           setSessionActive(false);
           setSessionEnded(true);
           setSummary(msg);
@@ -156,6 +158,7 @@ export default function Consultation({ user }: Props) {
 
         case "error":
           setIsTyping(false);
+          setIsEnding(false);
           setErrorBanner(msg.content || "本轮处理失败，请稍后重试。");
           break;
 
@@ -193,9 +196,19 @@ export default function Consultation({ user }: Props) {
   const wsBroken =
     sessionActive && !sessionEnded && (ws.status === "error" || ws.status === "closed");
 
-  const handleEnd = () => {
-    ws.endSession();
-  };
+  const handleEnd = useCallback(() => {
+    if (isEnding) return;
+    if (!window.confirm("确认结束本次问诊？提交后将由系统对全程对话与临床表单进行总评，过程约需 10–30 秒。")) {
+      return;
+    }
+    setErrorBanner(null);
+    setIsEnding(true);
+    const ok = ws.endSession();
+    if (!ok) {
+      setIsEnding(false);
+      setErrorBanner("连接已断开，无法提交结束指令。请点击「重新连接」后再试。");
+    }
+  }, [ws, isEnding]);
 
   const patientName = caseInfo?.patient_profile?.name || "患者";
 
@@ -353,7 +366,8 @@ export default function Consultation({ user }: Props) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-57px)]">
+    <div className="flex h-[calc(100vh-57px)] relative">
+      {isEnding && <EndingOverlay />}
       {/* Left: Chat Area */}
       <div className="flex-1 flex flex-col bg-slate-50 min-w-0">
         {/* Top bar */}
@@ -380,9 +394,10 @@ export default function Consultation({ user }: Props) {
             {sessionActive && (
               <button
                 onClick={handleEnd}
-                className="px-4 py-1.5 border border-red-200 text-red-500 rounded-lg text-sm hover:bg-red-50 transition-colors"
+                disabled={isEnding}
+                className="px-4 py-1.5 border border-red-200 text-red-500 rounded-lg text-sm hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                结束问诊
+                {isEnding ? "正在生成报告..." : "结束问诊"}
               </button>
             )}
           </div>
@@ -478,6 +493,24 @@ export default function Consultation({ user }: Props) {
           ) : (
             <WorksheetPanel sessionId={sessionId} readOnly={!sessionActive} />
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EndingOverlay() {
+  return (
+    <div className="absolute inset-0 z-50 bg-white/70 backdrop-blur-sm flex items-center justify-center">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-xl px-8 py-6 flex items-center gap-4 max-w-sm">
+        <div className="w-8 h-8 border-4 border-medical/30 border-t-medical rounded-full animate-spin" />
+        <div>
+          <div className="text-sm font-semibold text-slate-700">
+            正在生成本次问诊总评...
+          </div>
+          <div className="text-xs text-slate-500 mt-1 leading-relaxed">
+            系统正基于全程对话与临床表单做整体评估，约需 10–30 秒，请勿关闭此页面。
+          </div>
         </div>
       </div>
     </div>

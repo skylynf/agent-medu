@@ -1,4 +1,4 @@
-"""问卷题目装载与 SUS 评分计算。"""
+"""问卷题目装载与 SUS / UES 评分计算。"""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 
 SURVEYS_DIR = Path(__file__).parent
-KNOWN_INSTRUMENTS = ("sus", "open_ended")
+KNOWN_INSTRUMENTS = ("sus", "ues", "open_ended")
 
 
 @lru_cache
@@ -63,5 +63,66 @@ def compute_sus_score(responses: dict) -> dict | None:
         "total_items": len(items),
         "per_item": per_item,
         "sus_score": total * 2.5,
+        "complete": True,
+    }
+
+
+def compute_ues_score(responses: dict) -> dict | None:
+    """UES 长版：反向题 6−原分；各分量表取均分；总体参与 = 四分量表均分之和。"""
+    spec = load_instrument("ues")
+    items = spec.get("items", [])
+    per_item: dict[str, int] = {}
+    coded_by_subscale: dict[str, list[float]] = {"fa": [], "pu": [], "ae": [], "rw": []}
+
+    for item in items:
+        qid = item["id"]
+        raw = responses.get(qid)
+        if raw is None:
+            continue
+        try:
+            v = int(raw)
+        except (TypeError, ValueError):
+            continue
+        if v < 1 or v > 5:
+            continue
+        per_item[qid] = v
+        coded = float(6 - v) if item.get("reverse") else float(v)
+        sub = item.get("subscale")
+        if sub in coded_by_subscale:
+            coded_by_subscale[sub].append(coded)
+
+    answered = len(per_item)
+    total_items = len(items)
+    if answered < total_items:
+        return {
+            "answered": answered,
+            "total_items": total_items,
+            "per_item": per_item,
+            "fa_mean": None,
+            "pu_mean": None,
+            "ae_mean": None,
+            "rw_mean": None,
+            "ues_overall": None,
+            "complete": False,
+        }
+
+    def _mean(vals: list[float]) -> float:
+        return sum(vals) / len(vals) if vals else 0.0
+
+    fa_m = _mean(coded_by_subscale["fa"])
+    pu_m = _mean(coded_by_subscale["pu"])
+    ae_m = _mean(coded_by_subscale["ae"])
+    rw_m = _mean(coded_by_subscale["rw"])
+    overall = fa_m + pu_m + ae_m + rw_m
+
+    return {
+        "answered": answered,
+        "total_items": total_items,
+        "per_item": per_item,
+        "fa_mean": fa_m,
+        "pu_mean": pu_m,
+        "ae_mean": ae_m,
+        "rw_mean": rw_m,
+        "ues_overall": overall,
         "complete": True,
     }

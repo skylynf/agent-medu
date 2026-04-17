@@ -26,6 +26,7 @@ export default function SingleAgent(_: Props) {
   const [sessionEnded, setSessionEnded] = useState(false);
   const [summary, setSummary] = useState<WSMessage | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const wsEventsProcessed = useRef(0);
   const isReconnectingRef = useRef(false);
@@ -98,12 +99,14 @@ export default function SingleAgent(_: Props) {
           break;
         case "session_summary":
           setIsTyping(false);
+          setIsEnding(false);
           setSessionActive(false);
           setSessionEnded(true);
           setSummary(msg);
           break;
         case "error":
           setIsTyping(false);
+          setIsEnding(false);
           setErrorBanner(msg.content || "本轮处理失败，请稍后重试。");
           break;
         default:
@@ -129,11 +132,19 @@ export default function SingleAgent(_: Props) {
     [ws]
   );
 
-  const handleEnd = () => {
-    if (window.confirm("确认结束本次单智能体练习吗？结束后无法继续追加问诊。")) {
-      ws.endSession();
+  const handleEnd = useCallback(() => {
+    if (isEnding) return;
+    if (!window.confirm("确认结束本次单智能体练习吗？结束后无法继续追加问诊。")) {
+      return;
     }
-  };
+    setErrorBanner(null);
+    setIsEnding(true);
+    const ok = ws.endSession();
+    if (!ok) {
+      setIsEnding(false);
+      setErrorBanner("连接已断开，无法提交结束指令。请点击「重新连接」后再试。");
+    }
+  }, [ws, isEnding]);
 
   const handleReconnect = useCallback(() => {
     setErrorBanner(null);
@@ -207,7 +218,18 @@ export default function SingleAgent(_: Props) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-57px)] bg-slate-50">
+    <div className="flex flex-col h-[calc(100vh-57px)] bg-slate-50 relative">
+      {isEnding && (
+        <div className="absolute inset-0 z-50 bg-white/70 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xl px-8 py-6 flex items-center gap-4 max-w-sm">
+            <div className="w-8 h-8 border-4 border-medical/30 border-t-medical rounded-full animate-spin" />
+            <div>
+              <div className="text-sm font-semibold text-slate-700">正在结束本次练习...</div>
+              <div className="text-xs text-slate-500 mt-1 leading-relaxed">即将跳转至练习回顾页面。</div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -231,9 +253,10 @@ export default function SingleAgent(_: Props) {
           {sessionActive && (
             <button
               onClick={handleEnd}
-              className="px-4 py-1.5 border border-sky-300 text-sky-700 rounded-lg text-sm hover:bg-sky-50"
+              disabled={isEnding}
+              className="px-4 py-1.5 border border-sky-300 text-sky-700 rounded-lg text-sm hover:bg-sky-50 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              结束本次练习
+              {isEnding ? "结束中..." : "结束本次练习"}
             </button>
           )}
         </div>

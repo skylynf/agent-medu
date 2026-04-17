@@ -39,6 +39,7 @@ export default function Exam(_: Props) {
   const [finalEval, setFinalEval] = useState<FinalEvaluation | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [waitingFinal, setWaitingFinal] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const wsEventsProcessed = useRef(0);
   const isReconnectingRef = useRef(false);
@@ -111,6 +112,7 @@ export default function Exam(_: Props) {
           break;
         case "session_summary":
           setIsTyping(false);
+          setIsEnding(false);
           setSessionActive(false);
           setSessionEnded(true);
           setSummary(msg);
@@ -126,6 +128,7 @@ export default function Exam(_: Props) {
           break;
         case "error":
           setIsTyping(false);
+          setIsEnding(false);
           setErrorBanner(msg.content || "本轮处理失败，请稍后重试。");
           break;
         default:
@@ -151,11 +154,19 @@ export default function Exam(_: Props) {
     [ws]
   );
 
-  const handleEnd = () => {
-    if (window.confirm("确认要结束考试并提交进行总评吗？提交后无法再次问诊。")) {
-      ws.endSession();
+  const handleEnd = useCallback(() => {
+    if (isEnding) return;
+    if (!window.confirm("确认要结束考试并提交进行总评吗？提交后无法再次问诊，总评过程约需 10–30 秒。")) {
+      return;
     }
-  };
+    setErrorBanner(null);
+    setIsEnding(true);
+    const ok = ws.endSession();
+    if (!ok) {
+      setIsEnding(false);
+      setErrorBanner("连接已断开，无法提交结束指令。请点击「重新连接」后再试。");
+    }
+  }, [ws, isEnding]);
 
   const handleReconnect = useCallback(() => {
     setErrorBanner(null);
@@ -363,7 +374,8 @@ export default function Exam(_: Props) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-57px)] bg-slate-50">
+    <div className="flex flex-col h-[calc(100vh-57px)] bg-slate-50 relative">
+      {isEnding && <EndingOverlay text="正在生成考试总评..." subtext="系统正基于全程对话与临床表单做整体评估（OSCE 4 维 + 诊断），约需 10–30 秒，请勿关闭此页面。" />}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -387,9 +399,10 @@ export default function Exam(_: Props) {
           {sessionActive && (
             <button
               onClick={handleEnd}
-              className="px-4 py-1.5 border border-amber-300 text-amber-700 rounded-lg text-sm hover:bg-amber-50"
+              disabled={isEnding}
+              className="px-4 py-1.5 border border-amber-300 text-amber-700 rounded-lg text-sm hover:bg-amber-50 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              结束并提交总评
+              {isEnding ? "正在生成总评..." : "结束并提交总评"}
             </button>
           )}
         </div>
@@ -444,6 +457,20 @@ function Card({ label, value, color }: { label: string; value: string; color: st
     <div className="bg-slate-50 rounded-xl p-4 text-center">
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
       <div className="text-xs text-slate-500 mt-1">{label}</div>
+    </div>
+  );
+}
+
+function EndingOverlay({ text, subtext }: { text: string; subtext: string }) {
+  return (
+    <div className="absolute inset-0 z-50 bg-white/70 backdrop-blur-sm flex items-center justify-center">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-xl px-8 py-6 flex items-center gap-4 max-w-sm">
+        <div className="w-8 h-8 border-4 border-medical/30 border-t-medical rounded-full animate-spin" />
+        <div>
+          <div className="text-sm font-semibold text-slate-700">{text}</div>
+          <div className="text-xs text-slate-500 mt-1 leading-relaxed">{subtext}</div>
+        </div>
+      </div>
     </div>
   );
 }

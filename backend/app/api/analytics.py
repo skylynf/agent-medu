@@ -22,7 +22,7 @@ from app.models.message import Message
 from app.models.session import TrainingSession
 from app.models.survey import SurveyResponse
 from app.models.user import User
-from app.surveys import compute_sus_score, load_instrument
+from app.surveys import compute_sus_score, compute_ues_score, load_instrument
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
@@ -422,10 +422,12 @@ async def export_surveys(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """SUS 全部 10 题原值 + 反向计分总分；开放题原文。"""
+    """SUS 原值与总分；UES 原值与分量表/总分；开放题原文。"""
     _require_researcher(user)
     sus_spec = load_instrument("sus")
     sus_item_ids = [it["id"] for it in sus_spec.get("items", [])]
+    ues_spec = load_instrument("ues")
+    ues_item_ids = [it["id"] for it in ues_spec.get("items", [])]
     open_spec = load_instrument("open_ended")
     open_item_ids = [it["id"] for it in open_spec.get("items", [])]
 
@@ -443,6 +445,8 @@ async def export_surveys(
          "instrument", "related_session_id", "submitted_at"]
         + [f"sus_{qid}" for qid in sus_item_ids]
         + ["sus_total_score", "sus_complete"]
+        + [f"ues_{qid}" for qid in ues_item_ids]
+        + ["ues_fa_mean", "ues_pu_mean", "ues_ae_mean", "ues_rw_mean", "ues_overall", "ues_complete"]
         + [f"open_{qid}" for qid in open_item_ids]
     )
 
@@ -457,6 +461,20 @@ async def export_surveys(
             scoring = compute_sus_score(responses) or {}
             sus_total = scoring.get("sus_score") if scoring.get("sus_score") is not None else ""
             sus_complete = "1" if scoring.get("complete") else "0"
+        ues_vals = [responses.get(qid, "") for qid in ues_item_ids]
+        ues_fa = ues_pu = ues_ae = ues_rw = ues_ov = ""
+        ues_complete = ""
+        if r.instrument == "ues":
+            us = compute_ues_score(responses) or {}
+            if us.get("complete"):
+                ues_fa = us.get("fa_mean", "")
+                ues_pu = us.get("pu_mean", "")
+                ues_ae = us.get("ae_mean", "")
+                ues_rw = us.get("rw_mean", "")
+                ues_ov = us.get("ues_overall", "")
+                ues_complete = "1"
+            elif us:
+                ues_complete = "0"
         open_vals = [responses.get(qid, "") for qid in open_item_ids]
         rows.append([
             str(r.id),
@@ -471,6 +489,13 @@ async def export_surveys(
             *sus_vals,
             sus_total,
             sus_complete,
+            *ues_vals,
+            ues_fa,
+            ues_pu,
+            ues_ae,
+            ues_rw,
+            ues_ov,
+            ues_complete,
             *open_vals,
         ])
 

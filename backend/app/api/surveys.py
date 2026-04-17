@@ -12,7 +12,13 @@ from app.database import get_db
 from app.models.session import TrainingSession
 from app.models.survey import SurveyResponse
 from app.models.user import User
-from app.surveys import KNOWN_INSTRUMENTS, compute_sus_score, list_instruments, load_instrument
+from app.surveys import (
+    KNOWN_INSTRUMENTS,
+    compute_sus_score,
+    compute_ues_score,
+    list_instruments,
+    load_instrument,
+)
 
 router = APIRouter(prefix="/api/surveys", tags=["surveys"])
 
@@ -52,6 +58,10 @@ async def submit_survey(
     response_to_store = dict(payload.responses)
     if payload.instrument == "sus":
         scoring = compute_sus_score(payload.responses)
+        if scoring is not None:
+            response_to_store["_scoring"] = scoring
+    elif payload.instrument == "ues":
+        scoring = compute_ues_score(payload.responses)
         if scoring is not None:
             response_to_store["_scoring"] = scoring
 
