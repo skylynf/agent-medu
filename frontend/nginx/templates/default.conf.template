@@ -4,12 +4,17 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # 使用系统 DNS，延迟解析后端主机名（请求时再解析，而非 nginx 启动时）
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+    resolver_timeout 5s;
+
     location / {
         try_files $uri $uri/ /index.html;
     }
 
     location /api/ {
-        proxy_pass http://${BACKEND_HOST}/api/;
+        set $backend "${BACKEND_HOST}";
+        proxy_pass http://$backend/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -18,7 +23,8 @@ server {
     }
 
     location /ws/ {
-        proxy_pass http://${BACKEND_HOST}/ws/;
+        set $backend "${BACKEND_HOST}";
+        proxy_pass http://$backend/ws/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
