@@ -11,6 +11,25 @@ fi
 # 最终兜底：Docker 内置 DNS
 : "${NGINX_LOCAL_RESOLVERS:=127.0.0.11}"
 
+# nginx resolver 指令要求 IPv6 地址用方括号包裹（如 [fd12::10]），
+# 而 /etc/resolv.conf 里的 IPv6 地址没有括号，需要在这里补上。
+bracket_ipv6() {
+    echo "$1" | awk '{
+        n = split($0, parts, " ")
+        for (i = 1; i <= n; i++) {
+            addr = parts[i]
+            # 含冒号说明是 IPv6，且尚未被括号包裹
+            if (addr ~ /:/ && addr !~ /^\[/) {
+                addr = "[" addr "]"
+            }
+            printf "%s", addr
+            if (i < n) printf " "
+        }
+        print ""
+    }'
+}
+
+NGINX_LOCAL_RESOLVERS=$(bracket_ipv6 "${NGINX_LOCAL_RESOLVERS}")
 export NGINX_LOCAL_RESOLVERS
 
 envsubst '$BACKEND_HOST $NGINX_LOCAL_RESOLVERS' \
