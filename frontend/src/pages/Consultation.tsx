@@ -33,12 +33,8 @@ export default function Consultation({ user }: Props) {
   const [isTyping, setIsTyping] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [isEnding, setIsEnding] = useState(false);
-  /** 右侧栏宽度（px），可拖动左侧竖条调整 */
-  const [sidebarWidth, setSidebarWidth] = useState(() =>
-    typeof window !== "undefined"
-      ? Math.min(560, Math.max(360, Math.round(window.innerWidth * 0.4)))
-      : 440
-  );
+  /** 右侧栏占视口宽度比例（0.2–0.6），可拖动左侧竖条调整 */
+  const [sidebarWidthFraction, setSidebarWidthFraction] = useState(0.4);
   /** 右侧栏内：上方「评估进度」占比（0–1），可拖动横条调整 */
   const [evalTopFraction, setEvalTopFraction] = useState(0.42);
   const verticalSplitRef = useRef<HTMLDivElement>(null);
@@ -224,14 +220,15 @@ export default function Consultation({ user }: Props) {
     (e: React.MouseEvent) => {
       e.preventDefault();
       const startX = e.clientX;
-      const startW = sidebarWidth;
-      const minW = 300;
+      const vw = window.innerWidth;
+      const startW = vw * sidebarWidthFraction;
+      const minFrac = 0.2;
+      const maxFrac = 0.6;
       const onMove = (ev: MouseEvent) => {
-        const maxW = Math.min(720, window.innerWidth * 0.68);
-        const next = Math.round(
-          Math.max(minW, Math.min(maxW, startW + (ev.clientX - startX)))
-        );
-        setSidebarWidth(next);
+        const w = window.innerWidth;
+        const nextPx = startW + (ev.clientX - startX);
+        const nextFrac = Math.min(maxFrac, Math.max(minFrac, nextPx / w));
+        setSidebarWidthFraction(nextFrac);
       };
       const onUp = () => {
         document.removeEventListener("mousemove", onMove);
@@ -240,7 +237,7 @@ export default function Consultation({ user }: Props) {
       document.addEventListener("mousemove", onMove);
       document.addEventListener("mouseup", onUp);
     },
-    [sidebarWidth]
+    [sidebarWidthFraction]
   );
 
   const onEvalWorksheetSplitDragStart = useCallback((e: React.MouseEvent) => {
@@ -518,8 +515,8 @@ export default function Consultation({ user }: Props) {
 
       {/* Right: 评估进度 + 临床表单 上下分栏，可同时查看 */}
       <div
-        style={{ width: sidebarWidth }}
-        className="shrink-0 border-l border-slate-200 bg-white overflow-hidden flex flex-col min-w-[300px]"
+        style={{ width: `${sidebarWidthFraction * 100}%` }}
+        className="shrink-0 border-l border-slate-200 bg-white overflow-hidden flex flex-col min-w-[20%] max-w-[60%]"
       >
         <div ref={verticalSplitRef} className="flex-1 min-h-0 flex flex-col">
           <section
