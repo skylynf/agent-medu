@@ -83,8 +83,7 @@ export default function Login({ onLogin }: Props) {
               <p className="text-slate-700 font-medium">退出研究</p>
               <p>
                 您有权<strong>随时自愿退出</strong>本研究：可随时停止使用本系统，不再参与后续环节。
-                已收集数据的留存与匿名化使用以研究团队伦理审查方案为准；若您对退出或数据有疑问，
-                请通过研究团队公布的联系方式咨询。
+                已收集数据的留存与匿名化使用以研究团队伦理审查方案为准。
               </p>
             </div>
             <button
@@ -92,7 +91,7 @@ export default function Login({ onLogin }: Props) {
               onClick={confirmRegisterNotice}
               className="mt-6 w-full py-3 bg-medical text-white rounded-lg font-medium hover:bg-medical-dark transition-colors"
             >
-              我已阅读并继续
+              同意并继续
             </button>
           </div>
         </div>
