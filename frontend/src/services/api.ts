@@ -186,6 +186,8 @@ export interface SurveyItem {
   text: string;
   reverse?: boolean;
   placeholder?: string;
+  /** 主观题等：是否必填 */
+  required?: boolean;
 }
 
 export interface SurveyInstrument {

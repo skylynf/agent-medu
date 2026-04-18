@@ -50,6 +50,19 @@ async def submit_survey(
     if payload.instrument not in KNOWN_INSTRUMENTS:
         raise HTTPException(status_code=400, detail="未知问卷")
 
+    if payload.instrument == "open_ended":
+        spec = load_instrument("open_ended")
+        for item in spec.get("items", []):
+            if not item.get("required"):
+                continue
+            qid = item["id"]
+            raw = payload.responses.get(qid)
+            if raw is None or (isinstance(raw, str) and not str(raw).strip()):
+                raise HTTPException(
+                    status_code=400,
+                    detail="请填写全部标注为必填的主观题后再提交。",
+                )
+
     if payload.related_session_id is not None:
         sess = await db.get(TrainingSession, payload.related_session_id)
         if sess is None or sess.user_id != user.id:

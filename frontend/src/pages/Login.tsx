@@ -15,6 +15,9 @@ export default function Login({ onLogin }: Props) {
   const [grade, setGrade] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingRegister, setPendingRegister] = useState<{ user: UserResponse; token: string } | null>(
+    null
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +34,7 @@ export default function Login({ onLogin }: Props) {
           institution: institution || undefined,
           grade: grade || undefined,
         });
-        onLogin(res.user, res.access_token);
+        setPendingRegister({ user: res.user, token: res.access_token });
       } else {
         const res = await api.auth.login({ username, password });
         onLogin(res.user, res.access_token);
@@ -43,8 +46,57 @@ export default function Login({ onLogin }: Props) {
     }
   };
 
+  const confirmRegisterNotice = () => {
+    if (!pendingRegister) return;
+    onLogin(pendingRegister.user, pendingRegister.token);
+    setPendingRegister(null);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50">
+      {pendingRegister && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="register-research-notice-title"
+        >
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+            <h2
+              id="register-research-notice-title"
+              className="text-lg font-semibold text-slate-800 mb-3"
+            >
+              研究参与说明
+            </h2>
+            <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
+              <p>
+                本测试为<strong>前瞻性研究测试</strong>，目前仍处于<strong>学术探索阶段</strong>，
+                <strong>仅用于学术研究</strong>。您在平台中产生的资料与信息将<strong>不作他用</strong>，
+                仅服务于本研究目的下的分析与报告撰写。
+              </p>
+              <p className="text-slate-700 font-medium">免责声明</p>
+              <p>
+                本平台提供的 AI 模拟问诊、学习反馈等功能仅供教学与研究场景使用，
+                不构成任何医疗建议、诊断或治疗意见。研究团队将按规范处理研究数据，
+                但互联网环境存在固有风险，无法对传输与存储的绝对安全作出法律意义上的保证。
+              </p>
+              <p className="text-slate-700 font-medium">退出研究</p>
+              <p>
+                您有权<strong>随时自愿退出</strong>本研究：可随时停止使用本系统，不再参与后续环节。
+                已收集数据的留存与匿名化使用以研究团队伦理审查方案为准；若您对退出或数据有疑问，
+                请通过研究团队公布的联系方式咨询。
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={confirmRegisterNotice}
+              className="mt-6 w-full py-3 bg-medical text-white rounded-lg font-medium hover:bg-medical-dark transition-colors"
+            >
+              我已阅读并继续
+            </button>
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-medical rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4 shadow-lg">

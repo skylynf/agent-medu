@@ -51,6 +51,19 @@ export default function PostTest() {
     const inst = instruments.find((i) => i.instrument === instrument);
     if (!inst) return;
     const data = responses[instrument] || {};
+    if (instrument === "open_ended") {
+      for (const item of inst.items) {
+        if (!item.required) continue;
+        const raw = data[item.id];
+        if (raw === undefined || raw === null || String(raw).trim() === "") {
+          setState((prev) => ({
+            ...prev,
+            [instrument]: { status: "error", message: "请填写标注为「必填」的主观题后再提交。" },
+          }));
+          return;
+        }
+      }
+    }
     setState((prev) => ({ ...prev, [instrument]: { status: "submitting" } }));
     try {
       const resp = await api.surveys.submit({
@@ -112,6 +125,33 @@ export default function PostTest() {
         />
       )}
 
+      {openInstrument && (
+        <SurveyCard
+          instrument={openInstrument}
+          values={responses["open_ended"] || {}}
+          onChange={(qid, val) => setAnswer("open_ended", qid, val)}
+          onSubmit={() => submit("open_ended")}
+          state={state["open_ended"]}
+          render={(item) => (
+            <div key={item.id}>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                <span className="mr-1">{item.text}</span>
+                {item.required && (
+                  <span className="text-red-600 font-semibold text-xs align-middle">［必填］</span>
+                )}
+              </label>
+              <textarea
+                rows={3}
+                value={(responses["open_ended"] || {})[item.id] || ""}
+                placeholder={item.placeholder || ""}
+                onChange={(e) => setAnswer("open_ended", item.id, e.target.value)}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical/30 focus:border-medical"
+              />
+            </div>
+          )}
+        />
+      )}
+
       {uesInstrument && (
         <SurveyCard
           instrument={uesInstrument}
@@ -127,30 +167,6 @@ export default function PostTest() {
               value={(responses["ues"] || {})[item.id]}
               onChange={(v) => setAnswer("ues", item.id, v)}
             />
-          )}
-        />
-      )}
-
-      {openInstrument && (
-        <SurveyCard
-          instrument={openInstrument}
-          values={responses["open_ended"] || {}}
-          onChange={(qid, val) => setAnswer("open_ended", qid, val)}
-          onSubmit={() => submit("open_ended")}
-          state={state["open_ended"]}
-          render={(item) => (
-            <div key={item.id}>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {item.text}
-              </label>
-              <textarea
-                rows={3}
-                value={(responses["open_ended"] || {})[item.id] || ""}
-                placeholder={item.placeholder || ""}
-                onChange={(e) => setAnswer("open_ended", item.id, e.target.value)}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical/30 focus:border-medical"
-              />
-            </div>
           )}
         />
       )}
