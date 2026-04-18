@@ -49,10 +49,10 @@ export default function Home({ user }: Props) {
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="mb-10">
         <h2 className="text-3xl font-bold text-slate-800">
-          欢迎进入 Medu-SPAgent
+          欢迎进入 Medu-SPAgent 广医版
         </h2>
         <p className="text-slate-500 mt-2 leading-relaxed">
-          研究面向 medical education 期刊投稿的标准化病人 (SP) 训练平台。
+          研究标准化病人 (SP) 训练平台。
           目前包含 <strong>单智能体 (SA)</strong> / <strong>多智能体 (MA)</strong> /
           <strong> 对照学习 (CT)</strong> / <strong>考试 (Exam)</strong> 四种学习方法与后测问卷。
         </p>

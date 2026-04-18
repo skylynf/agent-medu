@@ -77,8 +77,7 @@ export default function Login({ onLogin }: Props) {
               <p className="text-slate-700 font-medium">免责声明</p>
               <p>
                 本平台提供的 AI 模拟问诊、学习反馈等功能仅供教学与研究场景使用，
-                不构成任何医疗建议、诊断或治疗意见。研究团队将按规范处理研究数据，
-                但互联网环境存在固有风险，无法对传输与存储的绝对安全作出法律意义上的保证。
+                不构成任何医疗建议、诊断或治疗意见。
               </p>
               <p className="text-slate-700 font-medium">退出研究</p>
               <p>
