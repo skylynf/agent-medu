@@ -1,9 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, MethodInfo, MethodId, UserResponse } from "../services/api";
 
 interface Props {
   user: UserResponse;
+}
+
+/** 用户名为纯数字时按末位单双数隐藏主界面入口（使用 username，非姓名）。 */
+function hiddenMethodIdsForNumericUsername(username: string): Set<MethodId> {
+  if (!/^\d+$/.test(username)) return new Set();
+  const last = Number(username[username.length - 1]);
+  if (last % 2 === 1) {
+    return new Set<MethodId>(["multi_agent", "single_agent"]);
+  }
+  return new Set<MethodId>(["single_agent", "control"]);
 }
 
 const METHOD_ROUTES: Record<MethodId, string> = {
@@ -45,6 +55,18 @@ export default function Home({ user }: Props) {
 
   const isResearcher = user.role === "teacher" || user.role === "researcher";
 
+  const hiddenMethodIds = useMemo(
+    () => hiddenMethodIdsForNumericUsername(user.username),
+    [user.username]
+  );
+
+  const visibleMethods = useMemo(
+    () => methods.filter((m) => !hiddenMethodIds.has(m.id)),
+    [methods, hiddenMethodIds]
+  );
+
+  const introFiltered = !loading && visibleMethods.length < methods.length;
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="mb-10">
@@ -53,8 +75,16 @@ export default function Home({ user }: Props) {
         </h2>
         <p className="text-slate-500 mt-2 leading-relaxed">
           研究标准化病人 (SP) 训练平台。
-          目前包含 <strong>单智能体 (SA)</strong> / <strong>多智能体 (MA)</strong> /
-          <strong> 对照学习 (CT)</strong> / <strong>考试 (Exam)</strong> 四种学习方法与后测问卷。
+          {introFiltered ? (
+            <>
+              根据账号分组，当前向你开放以下学习方法与后测问卷（主界面仅展示可用入口）。
+            </>
+          ) : (
+            <>
+              目前包含 <strong>单智能体 (SA)</strong> / <strong>多智能体 (MA)</strong> /
+              <strong> 对照学习 (CT)</strong> / <strong>考试 (Exam)</strong> 四种学习方法与后测问卷。
+            </>
+          )}
         </p>
       </div>
 
@@ -62,7 +92,7 @@ export default function Home({ user }: Props) {
         <div className="text-slate-500">加载方法列表...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {methods.map((m) => (
+          {visibleMethods.map((m) => (
             <button
               key={m.id}
               onClick={() => navigate(METHOD_ROUTES[m.id])}
