@@ -1,43 +1,54 @@
+
 # Medu-SPAgent — Medical Education SP Agent
 
-面向 *Medical Education* 期刊投稿的 AI 标准化病人 (Standardized Patient, SP) 训练与研究平台。
-平台围绕 **「单智能体 vs 多智能体」** 的对照实验设计，提供四种学习方法
-（**SA / MA / CT / Exam**）与一套 **后测问卷**，并配套集中化 Prompt 库与论文级数据导出。
+> **Submission status:** This repository is associated with a manuscript currently under review at *npj Digital Medicine*.
 
-> 学生 Pipeline（学习 → 考试 → 后测）由研究者口头指引，系统不强制顺序，
-> 仅在每条 `TrainingSession` 上记录所选 `method` 字段，所有训练历史
-> 都会显式标注本次采用的是哪种方法。
+Medu-SPAgent is an AI-powered standardized patient (SP) training and research platform for medical education.
+
+The platform is designed around a controlled comparison between **single-agent** and **multi-agent** learning conditions. It provides four learning methods — **SA / MA / CT / Exam** — together with a **post-test questionnaire**, a centralized prompt registry, and structured data export for research analysis.
+
+> The student pipeline — learning → examination → post-test — is guided by the researcher outside the system.
+> The system does not enforce a fixed sequence. Instead, each `TrainingSession` records the selected `method` field, and every training history explicitly indicates which learning method was used.
 
 ---
 
-## 1. 四种学习方法 + 后测
+## 1. Four Learning Methods and Post-Test
 
-| ID | 中文名 | 智能体组成 | 学生可见反馈 | UI 入口 | 数据落库 |
+| ID | Name | Agent Composition | Student-Visible Feedback | UI Entry | Data Storage |
 |---|---|---|---|---|---|
-| `single_agent` | **单智能体学习 (SA)** | 仅 AI-SP | 无（结束页只回顾用时与提问次数） | `/single/:caseId` | `messages` + `training_sessions` |
-| `multi_agent` | **多智能体学习 (MA)** | AI-SP + Tutor + Turn-Evaluator (+ Final-Evaluator) | 实时 checklist、苏格拉底式导师提示；结尾屏蔽分数仅展示叙述反馈 | `/consultation/:caseId` | `messages` + `evaluation_snapshots` + `final_evaluations` |
-| `control` | **对照学习 (CT)** | 无 LLM 参与（确定性脚本） | 4 阶段渐进披露 + 阶段题；最后展示参考答案 | `/control/:caseId` | `ct_steps` |
-| `exam` | **考试方法 (Exam)** | AI-SP + Final-Evaluator | 过程中无反馈，结束后给出 OSCE 4 维 + 诊断正误 + checklist 命中 | `/exam/:caseId` | `messages` + `final_evaluations` |
-| `post_test` | 后测问卷 | — | SUS 10 项 + 开放题 | `/post-test` | `survey_responses` |
+| `single_agent` | **Single-Agent Learning (SA)** | AI-SP only | None. The ending page only shows duration and number of questions. | `/single/:caseId` | `messages` + `training_sessions` |
+| `multi_agent` | **Multi-Agent Learning (MA)** | AI-SP + Tutor + Turn-Evaluator + Final-Evaluator | Real-time checklist updates and Socratic tutor prompts. At the end, scores are hidden and only narrative feedback is shown. | `/consultation/:caseId` | `messages` + `evaluation_snapshots` + `final_evaluations` |
+| `control` | **Control Learning (CT)** | No LLM involvement; deterministic script | Four-stage progressive disclosure with stage-based questions. Reference answers are shown at the end. | `/control/:caseId` | `ct_steps` |
+| `exam` | **Exam Method (Exam)** | AI-SP + Final-Evaluator | No feedback during the encounter. After completion, the system displays four-dimensional OSCE results, diagnostic correctness, and checklist hits. | `/exam/:caseId` | `messages` + `final_evaluations` |
+| `post_test` | Post-Test Questionnaire | — | SUS 10-item questionnaire + open-ended questions | `/post-test` | `survey_responses` |
 
-> **SA vs MA** 是核心对照：两者对话界面几乎一致，只是 SA 关闭了 Tutor 与 Turn-Evaluator，
-> 用以分离「**多智能体脚手架**」相对于「**纯 LLM 对话**」的增益。SA 与 MA 都不向学生展示
-> 最终分数，避免学习路径中的评分焦虑污染体验测量。
+> **SA vs MA** is the core comparison.
+> The two dialogue interfaces are nearly identical, but SA disables the Tutor and Turn-Evaluator components.
+> This design isolates the added value of **multi-agent scaffolding** compared with **plain LLM-based dialogue**.
+> In both SA and MA, final scores are not shown to students, reducing the risk that score-related anxiety may affect the learning experience.
 
 ---
 
-## 2. 系统架构
+## 2. System Architecture
 
-> 论文级矢量/位图架构图位于 `docs/medu-spagent-architecture.png`
-> （总体架构）和 `docs/medu-spagent-methods.png`（四方法对照）。
-> 方法学文本见 `docs/METHODOLOGY.md`。
+Architecture diagrams are located at:
+
+- `docs/medu-spagent-architecture.png`
+- `docs/medu-spagent-methods.png`
+
+The methodology document is located at:
+
+- `docs/METHODOLOGY.md`
 
 ![Medu-SPAgent System Architecture](docs/medu-spagent-architecture.png)
+
 ![Agent collaboration policy across the four learning conditions](docs/medu-spagent-methods.png)
 
-### 2.1 总体模块
+---
 
-```
+### 2.1 Overall Modules
+
+```text
 ┌────────────────────────────────────────────────────────────────────┐
 │                      Frontend (React + Vite)                        │
 │  Home  →  Case Select  →                                            │
@@ -47,7 +58,7 @@
 │   ├── Exam        (Exam, /exam/:caseId)                             │
 │   └── PostTest, Dashboard, PromptAdmin                              │
 └──────────────────────────────┬─────────────────────────────────────┘
-        WebSocket (SA/MA/Exam)        REST (CT / surveys / admin / 数据)
+        WebSocket (SA/MA/Exam)        REST (CT / surveys / admin / data)
 ┌──────────────────────────────┴─────────────────────────────────────┐
 │                     Backend (FastAPI, Python 3.11)                  │
 │  ┌──────────────────────────────────────────────────────────────┐  │
@@ -75,9 +86,11 @@
                     └─────────────────────┘
 ```
 
-### 2.2 四种方法的 Agent 调用链
+---
 
-```
+### 2.2 Agent Call Chains Across the Four Methods
+
+```text
 ┌──── SA ────┐    ┌──── MA ────┐    ┌──── Exam ───┐    ┌──── CT ────┐
 │            │    │            │    │             │    │            │
 │  Student   │    │  Student   │    │   Student   │    │  Student   │
@@ -96,103 +109,138 @@
    no tutor          tutor visible    no tutor            no tutor
 ```
 
-### 2.3 数据模型概览
+---
 
-| 表 | 用途 |
+### 2.3 Data Model Overview
+
+| Table | Purpose |
 |---|---|
-| `users` | 学生 / 教师 / 研究员（含人口学字段） |
-| `training_sessions` | 每次会话；含 `method`（SA/MA/CT/Exam）、`prompt_versions_json`、`worksheet_json` |
-| `messages` | 全量对话；记录 `role` (`student/patient/tutor`)、`emotion`、`response_latency_ms`、`evaluator_delta_json` |
-| `evaluation_snapshots` | MA 模式逐轮 checklist 快照（SA 不写） |
-| `final_evaluations` | MA / Exam 模式总评（checklist 命中、OSCE 4 维、诊断正误、叙述反馈） |
-| `ct_steps` | CT 模式每阶段披露内容 + 学生输入 |
-| `survey_responses` | SUS / 开放题 / 人口学 |
-| `prompts` | Prompt 版本表；`active=true` 标记当前生效版本 |
+| `users` | Students, teachers, and researchers, including demographic fields |
+| `training_sessions` | Each session; includes `method` — SA / MA / CT / Exam — `prompt_versions_json`, and `worksheet_json` |
+| `messages` | Full dialogue records; includes `role` — `student/patient/tutor` — `emotion`, `response_latency_ms`, and `evaluator_delta_json` |
+| `evaluation_snapshots` | Turn-level checklist snapshots in MA mode; not written in SA mode |
+| `final_evaluations` | Final evaluations for MA and Exam modes, including checklist hits, four-dimensional OSCE scores, diagnostic correctness, and narrative feedback |
+| `ct_steps` | Stage-based disclosure content and student input in CT mode |
+| `survey_responses` | SUS responses, open-ended answers, and demographics |
+| `prompts` | Prompt version table; `active=true` marks the currently active version |
 
 ---
 
-## 3. Prompt 库（集中化、可改、可追溯）
+## 3. Prompt Registry
 
-- **YAML 默认值**：`backend/app/prompts/{sp_agent,tutor_agent,turn_evaluator,final_evaluator}.yaml`
-- 启动时把 YAML 装入内存缓存；若 DB 中相应 `key` 没有 `active` 行，则把 YAML v1 写入 `prompts` 表。
-- 研究员/教师可在 `/admin/prompts` 编辑 → 保存即新增版本 → 激活后下一次推理立即生效。
-- 每个 `TrainingSession` 在第一条学生消息时把当前 `prompt_versions_json` 快照写入，
-  **保证论文复现性**。
+The system uses a centralized, editable, and traceable prompt registry.
 
-> SA 模式只调用 `sp_agent`；MA 调用 `sp_agent + tutor_agent + turn_evaluator + final_evaluator`；
-> Exam 调用 `sp_agent + final_evaluator`；CT 不调用任何 LLM。
+- **YAML defaults**:
+  - `backend/app/prompts/sp_agent.yaml`
+  - `backend/app/prompts/tutor_agent.yaml`
+  - `backend/app/prompts/turn_evaluator.yaml`
+  - `backend/app/prompts/final_evaluator.yaml`
+
+- At startup, YAML prompts are loaded into the in-memory cache.
+- If the database does not contain an active row for a given `key`, the YAML v1 prompt is inserted into the `prompts` table.
+- Researchers and teachers can edit prompts in `/admin/prompts`.
+- Saving a prompt creates a new version.
+- Once activated, the new version is used in the next inference call.
+- When the first student message is sent in a `TrainingSession`, the current `prompt_versions_json` snapshot is written to the session record to support reproducibility.
+
+Prompt usage by method:
+
+| Method | Prompt Usage |
+|---|---|
+| SA | `sp_agent` only |
+| MA | `sp_agent` + `tutor_agent` + `turn_evaluator` + `final_evaluator` |
+| Exam | `sp_agent` + `final_evaluator` |
+| CT | No LLM prompt |
 
 ---
 
-## 4. 病例库 (MVP 6 例)
+## 4. Case Library
 
-1. 急性阑尾炎 — 转移性右下腹痛
-2. 急性胰腺炎 — 上腹痛 + 束带感
-3. 消化性溃疡穿孔 — 突发板状腹
-4. 急性胆囊炎 — 右上腹绞痛 + Murphy 征
-5. 肠梗阻 — 痛吐胀闭四大症状
-6. 肠系膜动脉栓塞 — 症状体征分离
+The MVP case library contains six abdominal surgery cases:
 
-> 同一份病例 YAML 同时供 SA / MA / CT / Exam 使用，确保**病例难度在不同方法间严格对齐**，
-> 仅「智能体协作策略」是自变量。CT 模式由 `build_ct_stages()` 自动把
-> `voluntary` / `on_inquiry` / `deep_inquiry` 三层切成 4 个固定阶段。
+1. Acute appendicitis — migratory right lower quadrant pain
+2. Acute pancreatitis — epigastric pain with belt-like radiation
+3. Perforated peptic ulcer — sudden board-like abdomen
+4. Acute cholecystitis — right upper quadrant colicky pain with Murphy’s sign
+5. Intestinal obstruction — abdominal pain, vomiting, distension, and obstipation
+6. Mesenteric arterial embolism — discrepancy between severe symptoms and mild physical signs
+
+The same case YAML files are used across SA, MA, CT, and Exam modes.
+
+This ensures that case difficulty is aligned across methods, while the **agent collaboration policy** remains the independent variable.
+
+In CT mode, `build_ct_stages()` automatically divides the `voluntary`, `on_inquiry`, and `deep_inquiry` information layers into four fixed stages.
 
 ---
 
-## 5. 数据导出（投稿附录直接可用）
+## 5. Data Export
 
-| 端点 | 用途 | 说明 |
+| Endpoint | Purpose | Description |
 |---|---|---|
-| `GET /api/analytics/export/sessions.csv` | 每行一个 session 的宽表 | 含人口学、`method`(SA/MA/CT/Exam)、duration、checklist 完成率、final_score、4 维 OSCE、诊断正误、prompt 版本 |
-| `GET /api/analytics/export/messages.jsonl` | 全量对话 (NDJSON) | 含 role / emotion / latency / evaluator_delta，便于定性编码 |
-| `GET /api/analytics/export/checklist_matrix.csv` | session × checklist_item 0/1 宽表 | 直接做组间对比（含 method 列） |
-| `GET /api/analytics/export/surveys.csv` | SUS 10 题原值 + 反向计分总分 + 开放题原文 | — |
-| `GET /api/analytics/export/ct_steps.jsonl` | CT 模式学生分阶段提问原文 | 论文定性分析用 |
+| `GET /api/analytics/export/sessions.csv` | Session-level wide table | Includes demographics, `method` — SA / MA / CT / Exam — duration, checklist completion rate, final score, four OSCE dimensions, diagnostic correctness, and prompt versions |
+| `GET /api/analytics/export/messages.jsonl` | Full dialogue export in NDJSON format | Includes role, emotion, latency, and evaluator delta |
+| `GET /api/analytics/export/checklist_matrix.csv` | Session × checklist item 0/1 wide matrix | Supports between-group comparison; includes the `method` column |
+| `GET /api/analytics/export/surveys.csv` | Survey export | Includes raw SUS 10-item responses, reverse-scored total score, and open-ended responses |
+| `GET /api/analytics/export/ct_steps.jsonl` | CT-mode staged responses | Contains students’ free-text inputs for each CT stage |
 
-> 老的 `/api/analytics/export/csv` 依然保留作兼容。
+The legacy endpoint `/api/analytics/export/csv` is retained for compatibility.
 
 ---
 
-## 6. WebSocket 协议（SA / MA / Exam 共用 `/ws/consultation`）
+## 6. WebSocket Protocol
+
+SA, MA, and Exam share the `/ws/consultation` WebSocket endpoint.
 
 ```jsonc
-// 1) auth
+// 1. Authentication
 { "token": "<JWT>" }
-// 2) 启动 — 选择方法
-{ "type": "start_session",
+
+// 2. Start session
+{
+  "type": "start_session",
   "case_id": "acute_appendicitis",
-  "method": "single_agent" | "multi_agent" | "exam" }
-// 3) 学生发问
-{ "type": "student_message", "content": "..." }
-// 4) 结束（Exam / MA 会触发 final_evaluator；SA 仅落库元信息）
-{ "type": "end_session" }
+  "method": "single_agent" | "multi_agent" | "exam"
+}
+
+// 3. Student message
+{
+  "type": "student_message",
+  "content": "..."
+}
+
+// 4. End session
+// In Exam and MA, this triggers the final evaluator.
+// In SA, only metadata is saved.
+{
+  "type": "end_session"
+}
 ```
 
-CT 模式不走 WS，使用 REST：
+CT mode does not use WebSocket. It uses REST endpoints:
 
-```
+```text
 POST /api/sessions/control/start          { case_id }
-GET  /api/sessions/control/{id}/state     -> 当前阶段（断点续答）
+GET  /api/sessions/control/{id}/state     -> current stage; supports resume
 POST /api/sessions/control/{id}/submit    { stage_index, student_input }
-GET  /api/sessions/control/{id}/steps     -> 学生所有阶段输入回顾
+GET  /api/sessions/control/{id}/steps     -> review all student inputs
 ```
 
 ---
 
-## 7. 快速开始
+## 7. Quick Start
 
-### 后端
+### Backend
 
 ```bash
 cd backend
 python -m venv venv
 venv\Scripts\activate    # macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
-copy .env.example .env   # 编辑填入 DASHSCOPE_API_KEY 与 DATABASE_URL
+copy .env.example .env   # Edit DASHSCOPE_API_KEY and DATABASE_URL
 uvicorn app.main:app --reload
 ```
 
-### 前端
+### Frontend
 
 ```bash
 cd frontend
@@ -200,41 +248,37 @@ npm install
 npm run dev
 ```
 
-### 数据库
+### Database
 
-需要 PostgreSQL（Railway 部署时自动注入 `DATABASE_URL`）。本地：
+PostgreSQL is required. When deployed on Railway, `DATABASE_URL` is injected automatically.
+
+For local development:
 
 ```bash
 createdb spagent
-# 启动后端时会自动 create_all 所有表，
-# 并幂等执行 ALTER TABLE 把新加的 method / prompt_versions_json / worksheet_json 列补齐。
+# When the backend starts, it automatically creates all tables
+# and idempotently applies ALTER TABLE operations for newly added
+# columns such as method, prompt_versions_json, and worksheet_json.
 ```
 
 ---
 
-## 8. Railway 部署
+## 8. Railway Deployment
 
-1. Railway 创建项目并加 PostgreSQL 服务
-2. 后端服务连接 `backend/`，前端服务连接 `frontend/`
-3. 环境变量：`DATABASE_URL`、`DASHSCOPE_API_KEY`、`JWT_SECRET`
-4. 前端 nginx 把 `/api` 与 `/ws` 反代到 backend 服务的内部域名
-
----
-
-## 9. 技术栈
-
-- **Backend**: Python 3.11, FastAPI, SQLAlchemy 2.0 (asyncpg), Websockets, JWT, PyYAML
-- **Frontend**: React 18 + Vite + TypeScript + TailwindCSS + Recharts
-- **LLM**: 通义千问 `qwen-max` (DashScope API)
-- **数据库**: PostgreSQL 15
+1. Create a Railway project and add a PostgreSQL service.
+2. Connect the backend service to `backend/`.
+3. Connect the frontend service to `frontend/`.
+4. Configure environment variables:
+   - `DATABASE_URL`
+   - `DASHSCOPE_API_KEY`
+   - `JWT_SECRET`
+5. Configure the frontend nginx service to reverse proxy `/api` and `/ws` to the backend internal domain.
 
 ---
 
-## 10. 论文投稿建议附录
+## 9. Technology Stack
 
-- 附录 A：病例 YAML 全文（6 个）
-- 附录 B：4 个 Prompt 模板及其使用版本（SA 仅 sp_agent；MA 全量；Exam = SP + Final；CT 无）
-- 附录 C：history-taking checklist 与 holistic OSCE rubric
-- 附录 D：导出 CSV/JSONL 字段字典
-- 附录 E：SUS + 开放题题目原文
-- 附录 F：四组（SA / MA / CT / Exam）的方法学说明（见 `docs/METHODOLOGY.md`）
+- **Backend**: Python 3.11, FastAPI, SQLAlchemy 2.0, asyncpg, WebSockets, JWT, PyYAML
+- **Frontend**: React 18, Vite, TypeScript, TailwindCSS, Recharts
+- **LLM**: Qwen `qwen-max` via DashScope API
+- **Database**: PostgreSQL 15
